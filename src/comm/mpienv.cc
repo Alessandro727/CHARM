@@ -29,8 +29,6 @@ namespace Charm{
 
 mpi_env_t* mpi_env;
 
-
-
 /* build MPI env */
 void mpi_env_t::mpi_env_init(int *argc, char** argv[]){
   int is_inited = 0;

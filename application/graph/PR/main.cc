@@ -30,7 +30,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace Charm;
 
-const int scale = 16;
+const int scale = 18;
 const int edgefactor = 16;
 
 void pagerank(EdgeList& el, GlobalAddress<G> g){
@@ -47,10 +47,8 @@ void pagerank(EdgeList& el, GlobalAddress<G> g){
 int main(int argc, char* argv[]){
 
   CHARM_Init(&argc, &argv);
-  PerfCounter e;
-  e.startCounters();
 
-  run([&e] {
+  run([] {
     int64_t nvtx_scale = ((int64_t)1L) << scale;
     int64_t desired_nedge = nvtx_scale * edgefactor;
     EdgeList el;
@@ -60,9 +58,6 @@ int main(int argc, char* argv[]){
     auto g = G::Undirected(el, false);
     pagerank(el, g);
 
-    e.stopCounters();
-    e.printReport(std::cout, 1); // use n as scale factor
-    std::cout << std::endl;
     mlog_dump();
   });
   CHARM_Finalize();

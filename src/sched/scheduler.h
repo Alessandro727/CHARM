@@ -31,7 +31,7 @@
 #include "utils/utils.h"
 #include "utils/memlog.h"
 #include "comm/mpienv.h"
-
+#include "perf/perf_counter.h"
 
 namespace Charm{
 
@@ -47,7 +47,18 @@ public:
 
   void task_worker();
 
+  void set_thread_affinity(int core_id);
+
   inline void yield(){
+    //std::cout << "CORO YELD!!! \n";
+    //eventsCounter.printReport(std::cout, 100); 
+    //uint64_t counter = eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+    if (rank == 0) {
+      uint64_t counter = eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+      if (counter != 0) {
+        std::cout << "WORKER: " << rank << ", Counter = " << counter << " and PID = " << getpid() << std::endl;
+      }
+    }
     csched->coroutine_yield();
   }
 
@@ -81,6 +92,9 @@ public:
 
   inline void finish(){
     this->stop = true;
+    eventsCounter->stopCounters();
+    //eventsCounter->printReport(std::cout, 1);
+    //std::cout << std::endl;
   }
 
   inline void add_task_worker(int num){
@@ -109,7 +123,7 @@ public:
       //signal(this->have_tasks);
     }
   }
-
+  PerfCounter* eventsCounter;
  
 private:
   size_t rank;
@@ -118,6 +132,7 @@ private:
   Coro_Scheduler * csched;
   //Condition * have_tasks;
   TaskQueue taskQ;
+  
   std::mutex l_mtx, r_mtx;
 };
 
@@ -148,7 +163,8 @@ public:
     workers[ith]->private_enqueue(f);
   }
 
- 
+  PerfCounter* schedulerCounter;
+
 private:
   size_t num_threads;
   std::vector<Worker*> workers;

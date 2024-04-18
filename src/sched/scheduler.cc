@@ -53,13 +53,17 @@ Worker::Worker(size_t ith, int worker_num,  Thread_Barrier * tb)
     //ASSERT(retval == -1, "Failed to set thread affinity to target numa node");
 #endif
 
+    this->eventsCounter = new PerfCounter();
+    this->eventsCounter->startCounters();
+
     thread_id = ith;
     tb->wait();
 
     /* create normal workers */
     this->add_task_worker(worker_num);
-
+    
     csched->await();
+    
   });
 
 #ifndef NUMA_AWARE
@@ -89,6 +93,17 @@ void Worker::task_worker(){
       maybe_yield();
     }
   }
+}
+
+void Worker::set_thread_affinity(int core_id) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(core_id, &cpuset);
+
+    int rc = pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
+    if (rc != 0) {
+        std::cerr << "Error setting thread affinity: " << rc << std::endl;
+    }
 }
 
    

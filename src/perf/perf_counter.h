@@ -56,9 +56,22 @@ struct PerfCounter {
 	  read_format prev;
 	  read_format data;
 
+/* 	  uint64_t readCounter() {
+		double multiplexingCorrection = static_cast<double>(data.time_enabled - prev.time_enabled) / static_cast<double>(data.time_running - prev.time_running);
+		return static_cast<uint64_t>(static_cast<double>(data.value - prev.value) * multiplexingCorrection); 
+	  } */
+
 	  uint64_t readCounter() {
-		 double multiplexingCorrection = static_cast<double>(data.time_enabled - prev.time_enabled) / static_cast<double>(data.time_running - prev.time_running);
-		 return static_cast<double>(data.value - prev.value) * multiplexingCorrection;
+		uint64_t count = 0, values[3];
+		int ret;
+		ret = read(fd, values, sizeof(values));
+        if (ret != sizeof(values)) {
+        	std::cout << "cannot read results: " << strerror(errno) << std::endl;
+		}
+		if (values[2]) {
+			count = (uint64_t)((double)values[0] * values[1]/values[2]);
+		}
+		return count;
 	  }
    };
 
@@ -75,15 +88,24 @@ struct PerfCounter {
 		//errx(1, "libpfm initialization failed");
 	  }
 
+	  // Fill from L3 or different L2 in same CCX
 	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
-   	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
-   	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+
+	  // Fill from cache of different CCX in same NUMA node
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
+
+	  // Fill from CCX cache in different NUMA node
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+
+	  // Fill from DRAM or IO connected in same NUMA node
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+
    	  // additional counters can be found running showevtinfo in perfmon2-libpfm4/examples
 
 	  for (unsigned i=0; i<events.size(); i++) {
 		 auto& event = events[i];
-		 //event.fd = static_cast<int>(syscall(__NR_perf_event_open, &event.pe, 0, -1, -1, 0));
-		 event.fd = perf_event_open(&event.pe, getpid(), -1, -1, 0);
+		 event.fd = static_cast<int>(syscall(__NR_perf_event_open, &event.pe, 0, -1, -1, 0));
+		 //event.fd = perf_event_open(&event.pe, getpid(), -1, -1, 0);
 		 if (event.fd < 0) {
 			std::cout << "Error opening counter " << names[i] << std::endl;
 			events.resize(0);
@@ -115,16 +137,16 @@ struct PerfCounter {
        * will be used to scale the raw count as if the event had run all
        * along
        */
-      pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
+      //pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
 
       /* do not start immediately after perf_event_open() */
       pe.disabled = 1;
 
       pe.inherit = 1;
-      pe.inherit_stat = 0;
-      pe.exclude_user = !(domain & USER);
-      pe.exclude_kernel = !(domain & KERNEL);
-      pe.exclude_hv = !(domain & HYPERVISOR);
+      //pe.inherit_stat = 0;
+      //pe.exclude_user = !(domain & USER);
+      //pe.exclude_kernel = !(domain & KERNEL);
+      //pe.exclude_hv = !(domain & HYPERVISOR);
       pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
    }
 
@@ -157,7 +179,7 @@ struct PerfCounter {
 	  }
    }
 
-   double getCounter(const std::string& name) {
+   uint64_t getCounter(const std::string& name) {
 	  for (unsigned i=0; i<events.size(); i++)
 		 if (names[i]==name)
 			return events[i].readCounter();
@@ -196,4 +218,33 @@ struct PerfCounter {
 
 	  printCounter(headerOut,dataOut,"scale",normalizationConstant);
    }
+
+   static void printCounterValuePair(std::ostream& out, std::string name, std::string counterValue, bool addNewLine = true) {
+        out << name << ": " << counterValue;
+        if (addNewLine) {
+            out << std::endl;
+        }
+    }
+
+    template <typename T>
+    static void printCounterValuePair(std::ostream& out, std::string name, T counterValue, bool addNewLine = true) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(2) << counterValue;
+        PerfCounter::printCounterValuePair(out, name, stream.str(), addNewLine);
+    }
+
+   void printReportByLine(std::ostream& out, uint64_t normalizationConstant) {
+          std::stringstream data;
+          if (!events.size())
+                 return;
+
+          // print all metrics
+          for (unsigned i=0; i<events.size(); i++) {
+                 printCounterValuePair(data,names[i],events[i].readCounter()/static_cast<uint64_t>(normalizationConstant));
+          }
+
+          printCounterValuePair(data,"scale",normalizationConstant);
+          out << data.str() << std::endl;
+   }
+
 };

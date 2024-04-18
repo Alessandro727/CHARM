@@ -46,8 +46,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "pgas/rpc.h"
 #include "pgas/parallelfor.h"
 
-#include "perf/perf_counter.h"
-
 namespace Charm{
 
 void CHARM_Init(int* argc, char** argv[]);
