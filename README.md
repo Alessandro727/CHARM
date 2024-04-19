@@ -1,4 +1,4 @@
-## CHARM: Chiplet Heterogeneity-Aware Runtime Mapping system
+## CHARM: Chiplet Heterogeneity-Aware Runtime Mapping System
 
 CHARM is a C++ runtime system for scaling and improving applications performance on chiplet-based processors.
 
@@ -21,9 +21,7 @@ You must have a 64-bit Linux system with the following installed to build CHARM.
 
 ## Quick Start
 
-
-Like Grappa and Ring, Charm is primarly designed to be a "global view" model, whcih means that rather than coordinating where all parallel SPMD processes are at and how they devide up the data, the programmer is encourage to think of the system **as a large single shared memory**.
-
+Unlike Grappa and Ring, which promote a unified shared memory model, Charm emphasizes coordinated data distribution and task division among processes. It addresses not just NUMA architectures but also the heterogeneity of partitioned L3 caches in chiplet-based processors.
 
 ### Hello world
 
