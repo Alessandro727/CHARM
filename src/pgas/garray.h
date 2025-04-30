@@ -53,7 +53,7 @@ inline void rfree(GlobalAddress<void> vaddr){
 // since we don't want to traverse the array in a mess
 template <typename T=char>
 GlobalAddress<T> gmalloc(size_t size){
-  ASSERT( BLOCK_SIZE%sizeof(T) == 0, "please pack the data_type size to divisor of 64 bytes!");
+  ASSERT_CHARM( BLOCK_SIZE%sizeof(T) == 0, "please pack the data_type size to divisor of 64 bytes!");
   return static_cast<GlobalAddress<T>>(rmalloc( sizeof(T)*size ));
 }
 
@@ -62,7 +62,7 @@ GlobalAddress<T> gmalloc(size_t size){
 // since it preserve the memory first than call the allocation function.
 template <typename T=char>
 GlobalAddress<T> symm_gmalloc(){
-  ASSERT(sizeof(T)%BLOCK_SIZE==0, "must pad global proxy to multiple of BLOCK_SIZE");
+  ASSERT_CHARM(sizeof(T)%BLOCK_SIZE==0, "must pad global proxy to multiple of BLOCK_SIZE");
   auto symm_proxy = gmalloc<char>( cores() * (sizeof(T) + BLOCK_SIZE) );
   while(symm_proxy.get_id() != 0) ++symm_proxy;
   return static_cast<GlobalAddress<T>>(symm_proxy);

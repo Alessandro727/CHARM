@@ -22,6 +22,8 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <sstream>
+#include <cstdlib>
 
 #include <mpi.h>
 #include <unistd.h>
@@ -31,6 +33,46 @@
 #endif
 
 namespace Charm{
+
+#define LOG_CHARM_LEVEL(level) Logger(level)
+
+enum LogLevel {
+    INFO,       // For informational messages
+    WARNING,    // For warning messages
+    ERROR,      // For error messages
+    FATAL       // For fatal messages that result in program termination
+};
+
+class Logger {
+public:
+    Logger(int level) : logLevel(static_cast<LogLevel>(level)) {}
+
+    ~Logger() {
+        std::cerr << outputStream.str() << std::endl;
+        if (logLevel == FATAL) {
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    template<typename T>
+    Logger& operator<<(const T& msg) {
+        outputStream << msg;
+        return *this;
+    }
+
+private:
+    LogLevel logLevel;
+    std::ostringstream outputStream;
+};
+
+#define CHECK_EQ(val1, val2) \
+    do { \
+        if ((val1) != (val2)) { \
+            std::cerr << "Check failed: " #val1 " == " #val2 " (" << (val1) << " != " << (val2) << ") " \
+                      << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::abort(); \
+        } \
+    } while(0)
 
 #define ONE                 (1ULL)
 #define KILO                (1024ULL * ONE)
@@ -48,7 +90,7 @@ namespace Charm{
 //#define USE_UC true
 
 //const size_t THREAD_SIZE = std::thread::hardware_concurrency();
-const size_t THREAD_SIZE = 8;
+const size_t THREAD_SIZE = 8; //Bench.sh
 #ifdef NUMA_AWARE
 //const size_t SOCKETS = numa_num_configured_nodes();
 const size_t SOCKETS = 2;
@@ -71,7 +113,8 @@ const int POOL_PREFETCH_DIST = 16;
 //const double PGAS_FRACTION = 0.1; // every node use 10% memory for building PGAS
 const uint64_t PGAS_MEMORY_SIZE = 5*1l<<30;
 const double MEMORY_FRACTION = 0.5; // every node use 60% memory for system use.
-const double COMM_FRACTION = 0.3; // used for Communicator buff, pinned by NIC for RDMA
+// const double COMM_FRACTION = 0.3; // used for Communicator buff, pinned by NIC for RDMA
+const double COMM_FRACTION = 0.003; // used for Communicator buff, pinned by NIC for RDMA
 const double POOL_FRACTION = 1-COMM_FRACTION; // used as message pool. 
 extern uint64_t COMM_MEMORY_SIZE;
 extern uint64_t POOL_MAX_SIZE;
@@ -91,15 +134,15 @@ const int TIME_LAZY_THRESHOLD = 200;
 
 
 const int BLOCK_SIZE = 64;
-const int CACHE_LINE_SIZE = 64;
+const int CHARM_CACHE_LINE_SIZE = 64;
 
 struct Empty{};
 
-#define CACHE_ALIGNED __attribute__((aligned(64)))
+#define CACHE_ALIGNED_CHARM __attribute__((aligned(64)))
 
-#define LOG(...) fprintf(stdout, __VA_ARGS__)
+#define LOG_CHARM(...) fprintf(stdout, __VA_ARGS__)
 
-#define ASSERT( Predicate, Err_msg ) \
+#define ASSERT_CHARM( Predicate, Err_msg ) \
 if(true){                            \
   if( !(Predicate) ){                \
     std::cerr << "CHECK failed :"    \
@@ -164,6 +207,25 @@ template<typename T>
 inline double diff(T start, T end){
   return std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
 }
+
+#define CHECK(expr) \
+    if (!(expr)) Charm::CheckFail() << "Check failed: " #expr " (" << __FILE__ << ":" << __LINE__ << "): "
+
+class CheckFail {
+public:
+    CheckFail() = default;
+
+    ~CheckFail() {
+        std::cerr << std::endl;
+        std::abort();  // or exit(EXIT_FAILURE);
+    }
+
+    template <typename T>
+    CheckFail& operator<<(const T& value) {
+        std::cerr << value;
+        return *this;
+    }
+};
 
 }//namespace Charm
 #endif

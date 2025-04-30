@@ -25,6 +25,8 @@
 #include "engine/scheduler_hogwild.h"
 #include "engine/scheduler_percore.h"
 #include "engine/scheduler_pernode.h"
+#include <chrono>
+#include <thread>
 
 template<class A, class B>
 class TASK_ROW_SPARSE{
@@ -385,10 +387,16 @@ public:
 
 	double exec(unsigned int f_handle){
 
-		double data_byte = 1.0 * sizeof(A) * n_elems + sizeof(long) * n_elems + sizeof(long) * n_rows;
-		Timer t;
+        double total_time = 0.0;
+        double total_throughput = 0.0;
+        int n_epoch = 10;
+        double rs;
+        for(int i_epoch=0;i_epoch<n_epoch;i_epoch++){
+                double data_byte = 1.0 * sizeof(A) * n_elems + sizeof(long) * n_elems + sizeof(long) * n_rows;
 
-		double rs = 0.0;
+                Timer t;
+
+                rs = 0.0;
 
 		if(access_mode == DW_ACCESS_ROW){
 
@@ -434,12 +442,20 @@ public:
 		double te = t.elapsed();
 		double throughput_gb = data_byte / te / 1024 / 1024 / 1024;
 		std::cout.precision(3);
-		std::cout << "[DimmWitted FUNC=" << f_handle << "] " 
-				  << "TIME=" << std::setw(6) << te << " secs"
-				  << " THROUGHPUT=" << std::setw(6) << throughput_gb << " GB/sec." << std::endl;
-		
-		return rs;
-	}
+                total_time += te;
+                total_throughput += throughput_gb;
+         std::cout << "TIME=" << te << " secs" << " THROUGHPUT=" << throughput_gb << " GB/sec." << " and RS = " << rs << std::endl;
+
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        }
+
+        double average_time = total_time / n_epoch;
+        double average_throughput = total_throughput / n_epoch;
+        std::cout << "[DimmWitted FUNC=" << f_handle << "] " << " AVERAGE TIME=" << average_time << " secs" << " AVERAGE THROUGHPUT=" << average_throughput << " GB/sec." << std::endl;
+
+        return rs;
+        }
 
 };
 

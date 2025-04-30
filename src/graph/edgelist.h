@@ -88,7 +88,7 @@ public:
     if( format == "tsv" || format == "TSV"){
       return load_tsv(path, is_weight);
     }else{
-      ASSERT(false, "not implement");
+      ASSERT_CHARM(false, "not implement");
       return EdgeList();
     }
   }
@@ -125,7 +125,7 @@ public:
     }else if( format == "mtx" ){
 			return save_mtx(path, is_weight);
 		}else{
-      ASSERT(false, "not implement");
+      ASSERT_CHARM(false, "not implement");
     }
   }
 

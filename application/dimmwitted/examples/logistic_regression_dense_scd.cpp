@@ -16,6 +16,8 @@
 #define _GLM_DENSE_SCD_H
 
 #include "dimmwitted.h"
+#include <chrono>
+#include <thread>
 
 /**
  * \brief This file shows how to specify the same
@@ -92,8 +94,10 @@ double f_lr_grad_c2r(const DenseVector<double>* const p_col, int i_col,
 template<ModelReplType MODELREPL, DataReplType DATAREPL>
 double test_glm_dense_scd(){
 
-  long nexp = 100000;
-  long nfeat = 1024;
+  long nexp = 100000; // Bench.sh
+  long nfeat = 8192;
+
+
   double ** examples = new double* [nexp];
   double * content = new double[nexp*(nfeat+1)];
   for(long i=0;i<nexp;i++){
@@ -117,7 +121,7 @@ double test_glm_dense_scd(){
   dw.register_model_avg(f_handle_grad, f_lr_modelavg);
   dw.register_model_avg(f_handle_loss, f_lr_modelavg);
 
-  double sum = 0.0;
+/*  double sum = 0.0;
   double loss = 0.0;
   for(int i_epoch=0;i_epoch<2;i_epoch++){
     loss = dw.exec(f_handle_loss)/nexp;
@@ -130,7 +134,40 @@ double test_glm_dense_scd(){
     dw.exec(f_handle_grad);
   }
 
+  return sum;*/
+  double sum = 0.0;
+  double loss = 0.0;
+
+  double total_time = 0.0;
+  double total_throughput = 0.0;
+  int n_epoch = 10;
+  for(int i_epoch=0;i_epoch<n_epoch;i_epoch++){
+    loss = dw.exec(f_handle_loss)/nexp;
+    sum = 0.0;
+    for(int i=0;i<nfeat;i++){
+      sum += model.p[i];
+    }
+    std::cout.precision(8);
+    std::cout << sum << "    loss=" << loss << std::endl;
+//    dw.exec(f_handle_grad);
+//    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    Timer t;
+    dw.exec(f_handle_grad);
+    double data_byte = 1.0 * sizeof(double) * nexp * nfeat;
+    double te = t.elapsed();
+    double throughput_gb = data_byte / te / 1024 / 1024 / 1024;
+    total_time += te;
+    total_throughput += throughput_gb;
+    std::cout << "TIME=" << te << " secs" << " THROUGHPUT=" << throughput_gb << " GB/sec." << std::endl;
+  }
+
+    double average_time = total_time / n_epoch;
+    double average_throughput = total_throughput / n_epoch;
+    std::cout << "AVERAGE TIME=" << average_time << " secs" << " AVERAGE THROUGHPUT=" << average_throughput << " GB/sec." << std::endl;
+
+
   return sum;
+
 }
 
 #endif

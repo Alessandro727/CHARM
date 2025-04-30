@@ -37,12 +37,12 @@ thread_local size_t local_offset;
 EdgeList EdgeList::load_tsv( std::string path, bool is_weight=false){
   double start = walltime();
   // make sure file exists/
-  ASSERT(file_exists(path), "File not exist");
+  ASSERT_CHARM(file_exists(path), "File not exist");
 
   size_t fsize = file_size( path );
   size_t path_length = path.size() + 1;
 
-  ASSERT(path_length < 256, "file path is too long")
+  ASSERT_CHARM(path_length < 256, "file path is too long")
 
   char filename[256];
   strncpy( &filename[0], path.c_str(), 256 );
@@ -165,7 +165,7 @@ EdgeList EdgeList::load_tsv( std::string path, bool is_weight=false){
       // no more space available on target, so move to next core
       if( local_max < read_count && retval != 0 ) {
         likely_consumer = (likely_consumer + 1) % cores();
-        ASSERT( likely_consumer != my_id(), "No more space to place edge on cluster?");
+        ASSERT_CHARM( likely_consumer != my_id(), "No more space to place edge on cluster?");
       }
     }
 
@@ -187,18 +187,20 @@ EdgeList EdgeList::Kronecker(int scale, int64_t nedge, uint64_t seed1,
   double start = walltime();
   EdgeList el(nedge, 1ll<<scale);
   GlobalAddress<packed_edge> tmp;
+  
   make_graph(scale, nedge, seed1, seed2, &el.nedge, &tmp);
+  
   el.edges = GlobalAddress<Edge<double>>(tmp);
   std::cout << " Generate graph time : " << walltime() - start << " s." << std::endl;
   return el;
 }
 
 void EdgeList::save_bin(std::string path, bool is_weight){
-  ASSERT(false,"not implement");
+  ASSERT_CHARM(false,"not implement");
 }
 
 void EdgeList::save_mtx(std::string path, bool is_weight){
-  ASSERT(THREAD_SIZE==1, "thread size must equal to 1.");
+  ASSERT_CHARM(THREAD_SIZE==1, "thread size must equal to 1.");
   std::fstream fo(path, fo.out);
   fo << nv << " " << nedge << std::endl;
   auto iter = iterate_local(edges, nedge);

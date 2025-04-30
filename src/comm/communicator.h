@@ -66,7 +66,7 @@ struct mailbox_t{
   mail_t msg;
   mail_t prefetch_queue[PREFETCH_DIST];
   mailbox_t(){}
-} CACHE_ALIGNED ;
+} CACHE_ALIGNED_CHARM ;
 
 
 struct recv_context_t{

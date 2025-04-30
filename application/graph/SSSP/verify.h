@@ -69,11 +69,11 @@ inline double verify_sssp(EdgeList& el, GlobalAddress<G> g, int64_t root, bool d
     /* maybe duplicate edge between two vertex */
     auto min_wij = get_min_weight(g, i, j);
 
-    ASSERT( min_wij <= wij, "shorter path exists");
-    ASSERT(!((di < dj) && ((di + wij) < dj)), "Error, distance of the nearest neighbor is too great");
-    if(!directed) ASSERT(!((dj < di) && ((dj + wij) < di)), "Error, distance of the nearest neighbor is too great");
-    ASSERT(!((i == tj) && ((di + min_wij) != dj)), "Error, distance of the child vertex is not equal to");
-    if(!directed) ASSERT(!((j == ti) && ((dj + min_wij) != di)), "Error, distance of the child vertex is not equal to");
+    ASSERT_CHARM( min_wij <= wij, "shorter path exists");
+    ASSERT_CHARM(!((di < dj) && ((di + wij) < dj)), "Error, distance of the nearest neighbor is too great");
+    if(!directed) ASSERT_CHARM(!((dj < di) && ((dj + wij) < di)), "Error, distance of the nearest neighbor is too great");
+    ASSERT_CHARM(!((i == tj) && ((di + min_wij) != dj)), "Error, distance of the child vertex is not equal to");
+    if(!directed) ASSERT_CHARM(!((j == ti) && ((dj + min_wij) != di)), "Error, distance of the child vertex is not equal to");
 
   });
 

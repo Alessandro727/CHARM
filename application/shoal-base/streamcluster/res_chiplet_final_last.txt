@@ -1,0 +1,1010 @@
+Cores: 1
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 1 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x6b55
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x4e68
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0x5401
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x3abb
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x81c3
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x733f
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                          1130887.0000   1130887.0000
+-------------------------------
+Runtime: 1130887.000000
+0x9434
+
+real	18m51.034s
+user	19m24.611s
+sys	0m1.707s
+ 
+Cores: 2
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 2 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x5478
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x18f3
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xb7b6
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0xe42e
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0xced3
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x1ef2
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                           564627.0000    564627.0000
+-------------------------------
+Runtime: 564627.000000
+0x9434
+
+real	9m24.782s
+user	19m9.917s
+sys	0m1.793s
+ 
+Cores: 4
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 4 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0xca01
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x81c0
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0x487f
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x63f4
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x712e
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x386b
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                           259886.0000    259886.0000
+-------------------------------
+Runtime: 259886.000000
+0x9434
+
+real	4m20.041s
+user	17m34.319s
+sys	0m2.318s
+ 
+Cores: 8
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 8 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x507e
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x1355
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0x2c8d
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x30b2
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x4966
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0xf7e5
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                           113746.0000    113746.0000
+-------------------------------
+Runtime: 113746.000000
+0x9434
+
+real	1m53.909s
+user	14m47.831s
+sys	0m3.458s
+ 
+Cores: 16
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 16 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x80d9
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0xb79b
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xecd2
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0xb760
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x8fb9
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x7527
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            71522.0000     71522.0000
+-------------------------------
+Runtime: 71522.000000
+0x9434
+
+real	1m11.673s
+user	17m19.203s
+sys	0m35.948s
+ 
+Cores: 24
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 24 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0xab31
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x2ad3
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xf9bf
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x1d7e
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x673a
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0xb4b9
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            58746.0000     58746.0000
+-------------------------------
+Runtime: 58746.000000
+0x9434
+
+real	0m58.899s
+user	19m49.684s
+sys	1m46.596s
+ 
+Cores: 32
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 32 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replication: CPU 024 is on node  0
+replication: CPU 025 is on node  0
+replication: CPU 026 is on node  0
+replication: CPU 027 is on node  0
+replication: CPU 028 is on node  0
+replication: CPU 029 is on node  0
+replication: CPU 030 is on node  0
+replication: CPU 031 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0xf2a9
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x4813
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0x163a
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x1d81
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x31de
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x5c48
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            65733.0000     65733.0000
+-------------------------------
+Runtime: 65733.000000
+0x9434
+
+real	1m5.882s
+user	25m42.699s
+sys	6m5.196s
+ 
+Cores: 40
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 40 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replication: CPU 024 is on node  0
+replication: CPU 025 is on node  0
+replication: CPU 026 is on node  0
+replication: CPU 027 is on node  0
+replication: CPU 028 is on node  0
+replication: CPU 029 is on node  0
+replication: CPU 030 is on node  0
+replication: CPU 031 is on node  0
+replication: CPU 032 is on node  0
+replication: CPU 033 is on node  0
+replication: CPU 034 is on node  0
+replication: CPU 035 is on node  0
+replication: CPU 036 is on node  0
+replication: CPU 037 is on node  0
+replication: CPU 038 is on node  0
+replication: CPU 039 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0xca33
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x3908
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xae4c
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x22f6
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0xa31b
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x8769
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            66522.0000     66522.0000
+-------------------------------
+Runtime: 66522.000000
+0x9434
+
+real	1m6.673s
+user	30m3.588s
+sys	9m45.309s
+ 
+Cores: 48
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 48 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (1.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replication: CPU 024 is on node  0
+replication: CPU 025 is on node  0
+replication: CPU 026 is on node  0
+replication: CPU 027 is on node  0
+replication: CPU 028 is on node  0
+replication: CPU 029 is on node  0
+replication: CPU 030 is on node  0
+replication: CPU 031 is on node  0
+replication: CPU 032 is on node  0
+replication: CPU 033 is on node  0
+replication: CPU 034 is on node  0
+replication: CPU 035 is on node  0
+replication: CPU 036 is on node  0
+replication: CPU 037 is on node  0
+replication: CPU 038 is on node  0
+replication: CPU 039 is on node  0
+replication: CPU 040 is on node  0
+replication: CPU 041 is on node  0
+replication: CPU 042 is on node  0
+replication: CPU 043 is on node  0
+replication: CPU 044 is on node  0
+replication: CPU 045 is on node  0
+replication: CPU 046 is on node  0
+replication: CPU 047 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x46d
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x348a
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xc990
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0xccba
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0xf917
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0xc95d
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            69932.0000     69932.0000
+-------------------------------
+Runtime: 69932.000000
+0x9434
+
+real	1m10.093s
+user	34m46.140s
+sys	14m51.627s
+ 
+Cores: 56
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 56 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replication: CPU 024 is on node  0
+replication: CPU 025 is on node  0
+replication: CPU 026 is on node  0
+replication: CPU 027 is on node  0
+replication: CPU 028 is on node  0
+replication: CPU 029 is on node  0
+replication: CPU 030 is on node  0
+replication: CPU 031 is on node  0
+replication: CPU 032 is on node  0
+replication: CPU 033 is on node  0
+replication: CPU 034 is on node  0
+replication: CPU 035 is on node  0
+replication: CPU 036 is on node  0
+replication: CPU 037 is on node  0
+replication: CPU 038 is on node  0
+replication: CPU 039 is on node  0
+replication: CPU 040 is on node  0
+replication: CPU 041 is on node  0
+replication: CPU 042 is on node  0
+replication: CPU 043 is on node  0
+replication: CPU 044 is on node  0
+replication: CPU 045 is on node  0
+replication: CPU 046 is on node  0
+replication: CPU 047 is on node  0
+replication: CPU 048 is on node  0
+replication: CPU 049 is on node  0
+replication: CPU 050 is on node  0
+replication: CPU 051 is on node  0
+replication: CPU 052 is on node  0
+replication: CPU 053 is on node  0
+replication: CPU 054 is on node  0
+replication: CPU 055 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0xfb48
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0x9e3b
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0x36b1
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x1e07
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0x553e
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0xbd9e
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            80527.0000     80527.0000
+-------------------------------
+Runtime: 80527.000000
+0x9434
+
+real	1m20.686s
+user	38m54.665s
+sys	23m13.309s
+ 
+Cores: 64
+PARSEC Benchmark Suite
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+read 200000 points
+SHOAL (v ) initialization .. 64 threads .. LUA init ..
+ Error loading scripts/shl__settings.lua
+done (0.000000).
+do_crc = 1
+Number of nodes is: 2
+DMA Copying: [33m Disabled. [0m
+parsing affinity
+replication: CPU 000 is on node  0
+replication: CPU 001 is on node  0
+replication: CPU 002 is on node  0
+replication: CPU 003 is on node  0
+replication: CPU 004 is on node  0
+replication: CPU 005 is on node  0
+replication: CPU 006 is on node  0
+replication: CPU 007 is on node  0
+replication: CPU 008 is on node  0
+replication: CPU 009 is on node  0
+replication: CPU 010 is on node  0
+replication: CPU 011 is on node  0
+replication: CPU 012 is on node  0
+replication: CPU 013 is on node  0
+replication: CPU 014 is on node  0
+replication: CPU 015 is on node  0
+replication: CPU 016 is on node  0
+replication: CPU 017 is on node  0
+replication: CPU 018 is on node  0
+replication: CPU 019 is on node  0
+replication: CPU 020 is on node  0
+replication: CPU 021 is on node  0
+replication: CPU 022 is on node  0
+replication: CPU 023 is on node  0
+replication: CPU 024 is on node  0
+replication: CPU 025 is on node  0
+replication: CPU 026 is on node  0
+replication: CPU 027 is on node  0
+replication: CPU 028 is on node  0
+replication: CPU 029 is on node  0
+replication: CPU 030 is on node  0
+replication: CPU 031 is on node  0
+replication: CPU 032 is on node  0
+replication: CPU 033 is on node  0
+replication: CPU 034 is on node  0
+replication: CPU 035 is on node  0
+replication: CPU 036 is on node  0
+replication: CPU 037 is on node  0
+replication: CPU 038 is on node  0
+replication: CPU 039 is on node  0
+replication: CPU 040 is on node  0
+replication: CPU 041 is on node  0
+replication: CPU 042 is on node  0
+replication: CPU 043 is on node  0
+replication: CPU 044 is on node  0
+replication: CPU 045 is on node  0
+replication: CPU 046 is on node  0
+replication: CPU 047 is on node  0
+replication: CPU 048 is on node  0
+replication: CPU 049 is on node  0
+replication: CPU 050 is on node  0
+replication: CPU 051 is on node  0
+replication: CPU 052 is on node  0
+replication: CPU 053 is on node  0
+replication: CPU 054 is on node  0
+replication: CPU 055 is on node  0
+replication: CPU 056 is on node  0
+replication: CPU 057 is on node  0
+replication: CPU 058 is on node  0
+replication: CPU 059 is on node  0
+replication: CPU 060 is on node  0
+replication: CPU 061 is on node  0
+replication: CPU 062 is on node  0
+replication: CPU 063 is on node  0
+replica 0 - coordinator 0
+replica 1 - coordinator 2147483647
+[x] Replication
+[x] Distribution
+[ ] Partition
+[x] Hugepage
+[1] NUMA trim
+[ ] DMA enabled
+[x] CRC check
+Generating points randomly .. 
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 0: hizs=0x5c2d
+Iteration 0: centers=0x4d39 points=0x8c45
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 1: hizs=0xbaee
+Iteration 1: centers=0xa704 points=0x2e0c
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 2: hizs=0xf80
+Iteration 2: centers=0x98c8 points=0x6670
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 3: hizs=0x600b
+Iteration 3: centers=0x122a points=0x16f1
+shl__alloc: 102400000, huge=0, distribute=0
+shl__alloc: 102400000, huge=0, distribute=0
+shl__repl_sync NOW .. 
+Iteration 4: hizs=0xdbac
+Iteration 4: centers=0x8dbe points=0x567d
+localSearch .. 
+Iteration 5: hizs=0x2ab
+contcenters .. 
+outcenterIDs .. 
+Iteration 5: centers=0xd05 points=0x567d
+-------------------------------
+Step                           Step Time       Time Total      
+runtime                            90083.0000     90083.0000
+-------------------------------
+Runtime: 90083.000000
+0x9434
+
+real	1m30.236s
+user	47m24.539s
+sys	27m13.664s
+ 

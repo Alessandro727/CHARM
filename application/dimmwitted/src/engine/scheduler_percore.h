@@ -63,7 +63,9 @@ public:
     RDPTR(_RDPTR), WRPTR(_WRPTR),
     p_model_allocator(_p_model_allocator),
     n_numa_node( numa_max_node() + 1),
-    n_thread_per_node(getNumberOfCores()/(numa_max_node() + 1)),
+    //n_numa_node(1),
+    //n_thread_per_node(getNumberOfCores()/(numa_max_node() + 1)),
+    n_thread_per_node(4), // Bench.sh
     isjulia(false)
   {}
 
@@ -73,6 +75,8 @@ public:
 
   void prepare(){
     long n_sharding = n_numa_node * n_thread_per_node;
+    // n_sharding = 255;
+    // n_sharding = 64;
     model_replicas = new WRTYPE*[n_sharding+1];
     for(int i=0;i<n_sharding;i++){
       p_model_allocator(&model_replicas[i], WRPTR);
@@ -105,18 +109,23 @@ public:
     ){
 
     std::vector<std::future<double>> futures;
+    // std::vector<std::unique_ptr<Charm::Future<double>, std::default_delete<Charm::Future<double>>>> futuresCharm;
+    std::vector<std::unique_ptr<Charm::Future<int>, std::default_delete<Charm::Future<int>>>> futuresCharm; 
 
-//    long n_sharding = n_numa_node * n_thread_per_node;
-    long n_sharding = 8;
+    long n_sharding = n_numa_node * n_thread_per_node;
+//    long n_sharding = 1;
+    int core = n_sharding;
     std::cout << "| Running on " << n_sharding << " Cores..." << std::endl;
 
     double rs = 0.0;
     
+  //  n_sharding = 255;
+  //  n_sharding = 64;
     for(int i_sharding=0;i_sharding<n_sharding;i_sharding++){
       long start = ((long)(ntasks/n_sharding)+1) * i_sharding;
       long end = ((long)(ntasks/n_sharding)+1) * (i_sharding+1);
       end = end >= ntasks ? ntasks : end;
-      if(DATAREPL == DW_DATAREPL_FULL){
+/*      if(DATAREPL == DW_DATAREPL_FULL){
         futures.push_back(std::async(std::launch::async, _percore_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks));
       }else{
         futures.push_back(std::async(std::launch::async, _percore_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, start, end));
@@ -126,6 +135,28 @@ public:
     for(int i=0;i<n_sharding;i++){
       rs += futures[i].get();
     }
+*/
+      if(DATAREPL == DW_DATAREPL_FULL){
+//        futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks));
+//        Charm::call<Charm::async>(i_sharding, [this, &ntasks, &p_map, &tasks, &futures]{futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks));});
+        //std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks);
+        //  futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{double t =  _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks); return t;}));
+        futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks); return 0;}));
+      }else{
+//        futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end));
+//        Charm::call<Charm::async>(i_sharding, [this, &ntasks, &p_map, &tasks, &start, &end, &futures]{futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end));});
+        //std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end);
+        //  futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{double t = _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, start, end); return t;}));
+        futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end); return 0;}));
+      }
+      // rs += w->get();
+
+   }
+
+    for(int i=0;i<n_sharding;i++){
+  //   rs += futures[i].get();    
+     rs += futuresCharm[i]->get();  
+    } 
 
     if(isjulia == true){
 #ifdef _JULIA

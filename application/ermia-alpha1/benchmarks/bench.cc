@@ -26,6 +26,8 @@
 #include "../dbcore/sm-log-recover-impl.h"
 #include "../dbcore/sm-rep.h"
 
+#include "charm.h"
+
 volatile bool running = true;
 std::vector<bench_worker *> bench_runner::workers;
 std::vector<bench_worker *> bench_runner::cmdlog_redoers;
@@ -164,7 +166,6 @@ void bench_runner::run() {
     runner_thread->Join();
     ermia::thread::PutThread(runner_thread);
   }
-
   // load data, unless we recover from logs or is a backup server (recover from
   // shipped logs)
   if (not ermia::sm_log::need_recovery && not ermia::config::is_backup_srv()) {
@@ -192,7 +193,6 @@ void bench_runner::run() {
           ++n_running;
         }
       }
-
       // Loop over existing loaders to scavenge and reuse available threads
       while (done < loaders.size()) {
         for (uint i = 0; i < loaders.size(); i++) {
@@ -209,14 +209,12 @@ void bench_runner::run() {
     }
     ermia::volatile_write(ermia::MM::safesnap_lsn, ermia::logmgr->cur_lsn().offset());
     ALWAYS_ASSERT(ermia::MM::safesnap_lsn);
-
     // Persist the database
     ermia::logmgr->flush();
     if (ermia::config::enable_chkpt) {
       ermia::chkptmgr->do_chkpt();  // this is synchronous
     }
   }
-
   // Start checkpointer after database is ready
   if (ermia::config::is_backup_srv()) {
     if (ermia::config::command_log &&
@@ -331,6 +329,7 @@ void bench_runner::measure_read_view_lsn() {
 }
 
 void bench_runner::start_measurement() {
+  std::cout << "\nSTART MEASUREMENT \n\n\n" << std::endl;
   workers = make_workers();
   ALWAYS_ASSERT(!workers.empty());
   for (std::vector<bench_worker *>::const_iterator it = workers.begin();
@@ -467,9 +466,11 @@ void bench_runner::start_measurement() {
   running = false;
 
   ermia::volatile_write(ermia::config::state, ermia::config::kStateShutdown);
-  for (size_t i = 0; i < ermia::config::worker_threads; i++) {
+    for (size_t i = 0; i < ermia::config::worker_threads; i++) {
     workers[i]->Join();
   }
+
+  
 
   if (ermia::config::num_backups) {
     delete ermia::logmgr;

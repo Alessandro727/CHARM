@@ -31,7 +31,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace Charm;
 
-const int scale = 24;
+const int scale = 24; // Bench.sh
+//const int scale = 20;
 const int edgefactor = 16;
 
 template< typename T, typename E >
@@ -75,20 +76,31 @@ void bfs(EdgeList& tg, GlobalAddress<G> g){
 
 
 int main(int argc, char* argv[]){
+
   CHARM_Init(&argc, &argv);
+
   run([]{
+
     int64_t nvtx_scale = ((int64_t)1L) << scale;
     int64_t desired_nedge = nvtx_scale * edgefactor;
     EdgeList el;
+
     el = EdgeList::Kronecker(scale, desired_nedge, 111, 222);
+
     //el = EdgeList::Load("/mnt/lustre/mengke/twitter/out.twitter", "tsv");
     //el = EdgeList::Load("/mnt/lustre/mengke/wiki-en-cat/out.wiki-en-cat", "tsv");
-
     auto g = G::Undirected(el, false);
+
+  // PerfCounter e;
+  // e.startCounters();
+
     bfs(el, g);
+// e.stopCounters();
+//   e.printReportByLine(std::cout, 1);
 
     mlog_dump();
   });
   CHARM_Finalize();
+
   return 0;
 }

@@ -24,6 +24,7 @@ bool TaskQueue::try_private(Task* victim){
     return true;
   }else{
     //TODO(mengke): work stealing here
+    // Work stealing is now handled in the Worker class
     return false;
   }
 }

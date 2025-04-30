@@ -1,0 +1,654 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <sched.h>
+#include <numa.h>
+
+#include <threads.h>
+#include <atomic>
+#include <numaif.h>
+#include <omp.h>
+
+#include "shl_internal.h"
+#include "shl_configuration.hpp"
+#include "shl.h"
+
+#define CHIPLETS 8
+#define CORES_PER_CHIPLET 8
+#define RMT_CHIP_ACCESS_RATE 300
+// #define RMT_CHIP_ACCESS_RATE 500
+#define CORES_PER_NUMA_NODE 64
+
+#define NUMA_DOMAINS 2
+#define TOTAL_CORES 128
+// #if THREAD_SIZE > 64
+//     #define TOTAL_CHIPLETS 16
+// #else
+//     #define TOTAL_CHIPLETS 8
+// #endif
+
+#define TOTAL_CHIPLETS 8
+#define CORES_PER_CHIPLET 8
+// #define TASKS THREAD_SIZE THREAD_SIZE
+// #define SCHEDULER_TIMER 1000 // Good for 20
+#define SCHEDULER_TIMER 750 // Good for all with 64 cores with bfs
+// #define SCHEDULER_TIMER 200 // 
+
+void set_thread_affinity(int core_id) {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(core_id, &cpuset);
+
+    // int rc = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    // if (rc != 0) {
+	// error("Error setting thread affinity");
+    // }
+}
+
+  int calculateCore(int core) {
+    int base = (core % CHIPLETS) * CORES_PER_CHIPLET;  // This calculates the multiple of 8 part
+    int cycle = core / CHIPLETS;       // This determines whether to add 0 or 1
+    
+    if (cycle % 2 == 0) {
+        return base;
+    } else {
+        return base + 1;
+    }
+}
+
+
+
+void *shl__alloc_struct_shared(size_t size)
+{
+    return malloc(size);
+}
+
+void
+aff_set_oncpu(unsigned int cpu)
+{
+    cpu_set_t cpu_mask;
+    int err;
+
+    CPU_ZERO(&cpu_mask);
+    CPU_SET(cpu, &cpu_mask);
+
+    err = sched_setaffinity(0, sizeof(cpu_set_t), &cpu_mask);
+    if (err) {
+        perror("sched_setaffinity");
+        exit(1);
+    }
+}
+
+int shl__get_proc_for_node(int node)
+{
+    for (int i=0; i<MAXCORES; i++)
+        if (shl__node_from_cpu(i)==node)
+            return i;
+
+    assert (!"Cannot find processor on given node");
+    return -1;
+}
+
+extern coreid_t *affinity_conf;
+void shl__bind_processor_aff(int id)
+{
+//    printf("Binding [%d] to [%d]\n", id, affinity_conf[id]);
+    if (affinity_conf!=NULL) {
+        // aff_set_oncpu(affinity_conf[id]);
+	int value = 8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64);
+	aff_set_oncpu(affinity_conf[8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64)]);
+//	fprintf(stderr, "Value= %d\n", value);
+    	// set_thread_affinity(value);
+        // aff_set_oncpu(value);
+  //  	//set_thread_affinity(id);
+    	// int numa_node = value / CORES_PER_NUMA_NODE;
+    	// int numa_node = id / CORES_PER_NUMA_NODE;
+    	// unsigned long nodemask = 1UL << numa_node;
+    	// if (set_mempolicy(MPOL_BIND, &nodemask, sizeof(nodemask) * 8) == -1) {
+        //     perror("set_mempolicy error");
+    	// }  
+    }
+}
+
+void shl__bind_processor(int id)
+{
+//    aff_set_oncpu(id);
+	int value = 8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64);
+	aff_set_oncpu(value);
+}
+
+/**
+ * \brief checks availability of the NUMA
+ *
+ * \returns  0 iff NUMA is available
+ *          -1 iff NUMA is not available
+ */
+int shl__check_numa_availability(void)
+{
+    return numa_available();
+}
+
+/**
+ * \brief TODO
+ * @param id
+ */
+void shl__set_strict_mode(int id)
+{
+    numa_set_strict(id);
+}
+
+int
+shl__node_from_cpu(int cpu)
+{
+    int ret    = -1;
+    int ncpus  = numa_num_possible_cpus();
+    int node_max = numa_max_node();
+    struct bitmask *cpus = numa_bitmask_alloc(ncpus);
+
+    for (int node=0; node <= node_max; node++) {
+        numa_bitmask_clearall(cpus);
+        if (numa_node_to_cpus(node, cpus) < 0) {
+            perror("numa_node_to_cpus");
+            fprintf(stderr, "numa_node_to_cpus() failed for node %d\n", node);
+            abort();
+        }
+
+        if (numa_bitmask_isbitset(cpus, cpu)) {
+            ret = node;
+        }
+    }
+
+    numa_bitmask_free(cpus);
+    if (ret == -1) {
+        fprintf(stderr, "%s failed to find node for cpu %d\n",
+                __FUNCTION__, cpu);
+        abort();
+    }
+
+    return ret;
+}
+
+void** shl__copy_array(void *src, size_t size, bool is_used,
+                       bool is_ro, const char* array_name)
+{
+    bool replicate = is_ro;
+    int num_replicas = replicate ? shl__get_num_replicas() : 1;
+#ifndef REPLICATION
+    num_replicas = 1;
+#endif
+
+    //    printf(ANSI_COLOR_RED "Warning: " ANSI_COLOR_RESET "malloc for rep1\n");
+    printf("array: [%-30s] copy [%c] -- hugepage [%c] -- replication [%c] (%d) -- ", array_name,
+           is_used ? 'X' : ' ', get_conf()->use_hugepage ? 'X' : ' ', is_ro ? 'X' : ' ', num_replicas);
+
+    bool omp_copy = true;
+    void **tmp = (void**) (malloc(num_replicas*sizeof(void*)));
+
+    for (int i=0; i<num_replicas; i++) {
+#ifdef NUMA
+        if (replicate && num_replicas>1) {
+            // --------------------------------------------------
+            // Allocate memory using mmap
+
+            // Make size be alligned multiple of page size
+            size_t alloc_size = size;
+            while (alloc_size % PAGESIZE != 0)
+                alloc_size++;
+
+            int flags = MAP_ANONYMOUS | MAP_PRIVATE;
+
+#ifdef ENABLE_HUGEPAGE
+            // hugepage support on Linux
+            if (get_conf()->use_hugepage) {
+                flags |= MAP_HUGETLB;
+            }
+#endif
+
+            printf("mmap(size=0x%zx)\n", alloc_size);
+            tmp[i] = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE,
+                          flags, -1, 0);
+            if (tmp[i]==MAP_FAILED) {
+                perror("mmap");
+                exit(1);
+            }
+
+            //            omp_copy = false;
+
+            cpu_set_t cpu_mask_org;
+            int err = sched_getaffinity(0, sizeof(cpu_set_t), &cpu_mask_org);
+            if (err) {
+                perror("sched_getaffinity");
+                exit(1);
+            }
+
+            // bind processor
+            shl__bind_processor(shl__get_proc_for_node(i));
+
+            // copy
+            for (size_t j=0; j<size; j+=PAGESIZE) {
+                *((char*)(tmp[i])+j) = *((char*)src+j);
+            }
+
+            // move processor back to original mask
+            err = sched_setaffinity(0, sizeof(cpu_set_t), &cpu_mask_org);
+            if (err) {
+                perror("sched_setaffinity");
+                exit(1);
+            }
+        } else {
+            // If data is not replicated, still copy, but don't specify node
+            // Our allocation function will spread the data in the machine
+            size_t alloc_size = size;
+            while (alloc_size % PAGESIZE != 0)
+                alloc_size++;
+            int flags = MAP_ANONYMOUS | MAP_PRIVATE;
+#ifdef ENABLE_HUGEPAGE
+            // hugepage support on Linux
+            if (get_conf()->use_hugepage) {
+                flags |= MAP_HUGETLB;
+            }
+#endif
+            tmp[i] = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE,
+                          flags, -1, 0);
+            if (tmp[i]==MAP_FAILED) {
+                perror("mmap");
+                exit(1);
+            }
+
+
+        }
+#else
+#ifdef ARRAY
+        tmp[i] = new double[size/8];
+        printf("new ");
+#else
+        tmp[i] = malloc(size);
+        printf("malloc ");
+#endif
+#endif
+        assert(tmp[i]!=NULL);
+    }
+    printf("\n");
+
+    assert(sizeof(char)==1);
+    assert(tmp!=NULL);
+    if (is_used && omp_copy) {
+        for (int i=0; i<num_replicas; i++) {
+            #pragma omp parallel for
+            for (size_t j=0; j<size; j++)
+                *((char*)(tmp[i])+j) = *((char*)src+j);
+        }
+    }
+    return tmp;
+}
+
+void shl__copy_back_array(void **src, void *dest, size_t size, bool is_copied,
+                          bool is_ro, bool is_dynamic, const char* array_name)
+{
+    bool copy_back = true;
+    int num_replicas = is_ro ? shl__get_num_replicas() : 1;
+
+#ifndef REPLICATION
+    num_replicas = 1;
+#endif
+
+    // read-only: don't have to copy back, data is still the same
+    //  if (is_ro)
+    //  copy_back = false;
+
+    // dynamic: array was created dynamically in GM algorithm function,
+    // no need to copy back
+    if (is_dynamic)
+        copy_back = false;
+
+    printf("array: [%-30s] -- copied [%c] -- copy-back [%c] (%d)\n",
+           array_name, is_copied ? 'X' : ' ', copy_back ? 'X' : ' ',
+           num_replicas);
+
+    if (copy_back) {
+        // replicated data is currently read-only (consistency issues)
+        // so everything we have to copy back is not replicated
+        //  assert (num_replicas == 1);
+
+        for (int i=0; i<num_replicas; i++)
+            memcpy(dest, src[0], size);
+    }
+}
+
+void shl__copy_back_array_single(void *src, void *dest, size_t size, bool is_copied,
+                                 bool is_ro, bool is_dynamic, const char* array_name)
+{
+    bool copy_back = true;
+    int num_replicas = is_ro ? shl__get_num_replicas() : 1;
+
+#ifndef REPLICATION
+    num_replicas = 1;
+#endif
+
+    // read-only: don't have to copy back, data is still the same
+    if (is_ro)
+        copy_back = false;
+
+    // dynamic: array was created dynamically in GM algorithm function,
+    // no need to copy back
+    if (is_dynamic)
+        copy_back = false;
+
+    printf("array: [%-30s] -- copied [%c] -- copy-back [%c] (%d)\n",
+           array_name, is_copied ? 'X' : ' ', copy_back ? 'X' : ' ',
+           num_replicas);
+
+    if (copy_back) {
+        // replicated data is currently read-only (consistency issues)
+        // so everything we have to copy back is not replicated
+        assert (num_replicas == 1);
+
+        for (int i=0; i<num_replicas; i++)
+            memcpy(dest, src, size);
+    }
+}
+
+/**
+ * \brief ALlocate memory with the given flags.
+ *
+ * The array will NOT be initialized (but might be, to force the Linux
+ * Kernel to map the memory as requested)
+ *
+ * Supported options as a bitmask in opts are:
+ *
+ * - SHL_MALLOC_HUGEPAGE:
+ *   enable hugepage support
+ *
+ * - SHL_MALLOC_DISTRIBUTED:
+ *    distribute memory approximately equally on nodes that have threads
+ *
+ * \param ret_mi Is unused on Linux
+ */
+void* shl__malloc(size_t size, int opts, int *pagesize, int node, void **ret_mi)
+{
+    void *res;
+    bool use_hugepage = opts & SHL_MALLOC_HUGEPAGE;
+    bool use_largepage = opts & SHL_MALLOC_LARGEPAGE;
+    bool distribute = opts & SHL_MALLOC_DISTRIBUTED;
+    bool partition = opts & SHL_MALLOC_PARTITION;
+    bool single_node = opts & SHL_MALLOC_SINGLE_NODE;
+
+    // Round up to next multiple of page size (in case of hugepage)
+    *pagesize = use_hugepage ? PAGESIZE_HUGE : PAGESIZE;
+    size_t alloc_size = size;
+    while (use_hugepage && (alloc_size % *pagesize != 0))
+        alloc_size++;
+
+    // Set options for mmap
+    int options = MAP_ANONYMOUS | MAP_PRIVATE;
+    if (use_hugepage)
+        options |= MAP_HUGETLB;
+
+    printf("shl__alloc: %zu, huge=%d, distribute=%d",
+           alloc_size, use_hugepage, distribute);
+
+    // Allocate (alloc_size + 1 page)
+    // might have to shift if memory returned is not starting on page boundary
+    res = mmap(NULL, alloc_size + *pagesize, PROT_READ | PROT_WRITE, options, -1, 0);
+    if (res==MAP_FAILED) {
+        perror("mmap");
+        exit(1);
+    }
+
+    // Want the first element of the array starting at pageboundary
+    size_t rres = (size_t) res;
+    while (rres % (*pagesize) != 0) rres++;
+    res = (void*) rres;
+
+    // Distribute memory
+    // --------------------------------------------------
+    if (distribute) {
+
+        // XXX we need to make sure that this loop actually
+        // distributes memory. If we use hugepages, it might be that
+        // all threads work on the SAME page, which leads to
+        // imbalance. See gaud2014large
+#pragma omp parallel for
+        for (uint64_t i=0; i<alloc_size;i ++) {
+
+            ((char *) res)[i] = 0;
+        }
+    }
+
+
+    // Partition memory
+    // --------------------------------------------------
+    if (partition) {
+
+        // SK: cannot establish mapping here, as size of array
+        // elements is not known
+    }
+
+
+    // Single node
+    // --------------------------------------------------
+    if (single_node) {
+
+        // Write every page once to trigger mapping of pages.
+        // Do this from a single thread.
+        for (uint64_t i=0; i<alloc_size;i ++) {
+
+            ((char *) res)[i] = 0;
+        }
+    }
+
+    printf("\n");
+
+    return res;
+}
+
+
+/**
+ *
+ * \param num_replicas Specifies the number of replicas to be
+ * generated. If value given is <0, shl_malloc_replicated will
+ * determine the number of replicas to be used.
+ */
+void** shl__malloc_replicated(size_t size,
+                              int* pagesize,
+                              int* num_replicas,
+                              int options,
+                              void **meminfo)
+{
+    if (*num_replicas<=0) {
+        *num_replicas = shl__get_num_replicas();
+    }
+
+    assert (*num_replicas>0 && *num_replicas<12); // Sanity check
+
+    void **tmp = (void**) (malloc(*num_replicas*sizeof(void*)));
+
+    for (int i=0; i<*num_replicas; i++) {
+
+        // Allocate memory
+        // --------------------------------------------------
+
+        // Allocate
+        tmp[i] = shl__malloc(size, options, pagesize, SHL_NUMA_IGNORE, NULL);
+        assert(tmp[i]);
+
+        // Allocate on proper node; leverage Linux's first touch strategy
+        // --------------------------------------------------
+
+        cpu_set_t cpu_mask_org;
+        int err = sched_getaffinity(0, sizeof(cpu_set_t), &cpu_mask_org);
+        if (err) {
+            perror("sched_getaffinity");
+            exit(1);
+        }
+
+        // bind processor
+        shl__bind_processor(shl__get_proc_for_node(i));
+
+        // write once on every page
+        for (size_t j=0; j<size; j+=PAGESIZE)
+            *((char*)(tmp[i])+j) = 0;
+
+        // move processor back to original mask
+        err = sched_setaffinity(0, sizeof(cpu_set_t), &cpu_mask_org);
+        if (err) {
+            perror("sched_setaffinity");
+            exit(1);
+        }
+    }
+    return tmp;
+}
+
+long shl__node_size(int node, long  *freep)
+{
+    return numa_node_size(node, freep);
+}
+
+int shl__max_node(void)
+{
+    return numa_max_node();
+}
+
+bool shl__check_hugepage_support(void)
+{
+    int options = MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB;
+    void *res = mmap(NULL, 4096, PROT_READ | PROT_WRITE, options, -1, 0);
+
+    if (res==MAP_FAILED) {
+        return false;
+    } else {
+        int r = munmap(res, 4096);
+        assert (r);
+        return true;
+    }
+}
+
+
+unsigned long shl__timer_get_timestamp()
+{
+    struct timeval TV1;
+    gettimeofday(&TV1, NULL);
+    return (TV1.tv_sec * 1000 + TV1.tv_usec/1000);
+}
+
+int shl__memcpy_init(struct shl__memcpy_setup *setup)
+{
+    /* no  op */
+    return 0;
+}
+
+static inline int shl__memcpy_openmp1(uint8_t *dst, uint8_t *src, size_t elements)
+{
+#pragma omp parallel for
+    for (size_t i = 0; i < elements; ++i) {
+        dst[i] = src[i];
+    }
+    return elements;
+}
+static inline int shl__memcpy_openmp2(uint16_t *dst, uint16_t *src, size_t elements)
+{
+#pragma omp parallel for
+    for (size_t i = 0; i < elements; ++i) {
+        dst[i] = src[i];
+    }
+    return elements;
+}
+static inline int shl__memcpy_openmp4(uint32_t *dst, uint32_t *src, size_t elements)
+{
+#pragma omp parallel for
+    for (size_t i = 0; i < elements; ++i) {
+        dst[i] = src[i];
+    }
+    return elements;
+}
+static inline int shl__memcpy_openmp8(uint64_t *dst, uint64_t *src, size_t elements)
+{
+#pragma omp parallel for
+    for (size_t i = 0; i < elements; ++i) {
+        dst[i] = src[i];
+    }
+    return elements;
+}
+
+int shl__memcpy_openmp(void *dst, void *src, size_t element_size, size_t elements)
+{
+    switch(element_size) {
+        case 1:
+            return shl__memcpy_openmp1((uint8_t*)dst, (uint8_t*)src, elements);
+        case 2:
+            return shl__memcpy_openmp2((uint16_t*)dst, (uint16_t*)src, elements);
+        case 4:
+            return shl__memcpy_openmp4((uint32_t*)dst, (uint32_t*)src, elements);
+        case 8:
+            return shl__memcpy_openmp8((uint64_t*)dst, (uint64_t*)src, elements);
+        default:
+            memcpy(dst, src, element_size * elements);
+            return 0;
+    }
+}
+
+static inline int shl__memset_openmp1(uint8_t *dst, uint8_t *value, size_t elements)
+{
+#pragma omp parallel
+    {
+        uint8_t val = *value;
+#pragma omp parallel for
+        for (size_t i = 0; i < elements; ++i) {
+            dst[i] = val;
+        }
+    }
+    return elements;
+}
+static inline int shl__memset_openmp2(uint16_t *dst, uint16_t *value, size_t elements)
+{
+#pragma omp parallel
+    {
+        uint32_t val = *value;
+#pragma omp parallel for
+        for (size_t i = 0; i < elements; ++i) {
+            dst[i] = val;
+        }
+    }
+    return elements;
+}
+static inline int shl__memset_openmp4(uint32_t *dst, uint32_t *value, size_t elements)
+{
+#pragma omp parallel
+    {
+        uint32_t val = *value;
+#pragma omp parallel for
+        for (size_t i = 0; i < elements; ++i) {
+            dst[i] = val;
+        }
+    }
+    return elements;
+}
+static inline int shl__memset_openmp8(uint64_t *dst, uint64_t *value, size_t elements)
+{
+#pragma omp parallel
+    {
+        uint64_t val = *value;
+#pragma omp parallel for
+        for (size_t i = 0; i < elements; ++i) {
+            dst[i] = val;
+        }
+    }
+    return elements;
+}
+
+int shl__memset_openmp(void *dst, void *value, size_t element_size, size_t elements)
+{
+    switch(element_size) {
+        case 1:
+            return shl__memset_openmp1((uint8_t*)dst, (uint8_t*)value, elements);
+        case 2:
+            return shl__memset_openmp2((uint16_t*)dst, (uint16_t*)value, elements);
+        case 4:
+            return shl__memset_openmp4((uint32_t*)dst, (uint32_t*)value, elements);
+        case 8:
+            return shl__memset_openmp8((uint64_t*)dst, (uint64_t*)value, elements);
+        default:
+            assert(!"wrong size");
+            return 0;
+    }
+}

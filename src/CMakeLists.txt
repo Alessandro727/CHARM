@@ -1,5 +1,3 @@
-
-
 set( SOURCES
     utils/IO.h
     utils/memlog.h
@@ -51,15 +49,25 @@ set( SOURCES
     graph/graph.cc
     perf/perf_counter.h
     charm.h
-    charm.cc)
-
-
+    charm.cc
+)
 
 enable_language(ASM)
-set_source_files_properties( sched/context.S PROPERTIES LANGUAGE ASM COMPILE_FLAGS " -g")
+set_source_files_properties(sched/context.S PROPERTIES LANGUAGE ASM COMPILE_FLAGS " -g")
+
+# Add library target
+#add_library(Charm ${SOURCES})
+#if(BUILD_SHARED_LIBS)
+    add_library(Charm SHARED ${SOURCES})
+#else()
+#    add_library(Charm STATIC ${SOURCES})
+#endif()
 
 
-# add_executable(charm ${SOURCES})
-add_library(Charm STATIC ${SOURCES})
 add_dependencies(Charm tools)
 target_link_libraries(Charm ${CHARM_LD_LIBS} ${CHARM_STATIC_LIBS} ${EXTRA_LIBS})
+set_target_properties(Charm PROPERTIES
+    VERSION 1.0
+    SOVERSION 1
+    PUBLIC_HEADER "charm.h"
+)

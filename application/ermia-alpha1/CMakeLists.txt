@@ -1,7 +1,9 @@
 # No in-source build
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-  message(FATAL_ERROR "In-source builds are not allowed.")
-endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+#if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+#  message(FATAL_ERROR "In-source builds are not allowed.")
+#endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 
 cmake_minimum_required(VERSION 3.19)
 
@@ -10,13 +12,13 @@ project(ermia)
 set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Woverloaded-virtual -Werror=reorder -Wno-address-of-packed-member")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -Woverloaded-virtual -Werror=reorder -Wno-address-of-packed-member")
 set(LINK_FLAGS "-lc++abi -libverbs -lnuma -lpthread -pthread -lrt -lglog -lgflags")
 link_libraries(${LINK_FLAGS})
 
 # Pre-build glog and gflags with libc++
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/glog/lib)
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/gflags/lib)
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/glog/lib)
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/third-party/gflags/lib)
 
 # Store shared libraries under /lib
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -48,6 +50,8 @@ include_directories(third-party/sparsehash/src)
 include_directories(third-party/glog/include)
 include_directories(third-party/gflags/include)
 
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src /usr/include)
+
 add_subdirectory(benchmarks)
 add_subdirectory(dbcore)
 add_subdirectory(masstree)
@@ -70,7 +74,7 @@ add_library(thread_pool SHARED ${THREAD_POOL_SRC})
 # SI
 add_library(ermia_si SHARED ${LIB_ERMIA_SRC})
 add_executable(ermia_SI ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/dbtest.cc)
-target_link_libraries(ermia_SI ermia_si thread_pool)
+target_link_libraries(ermia_SI ermia_si thread_pool Charm)
 
 # Benchmark scripts
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/run.sh" DESTINATION ${CMAKE_BINARY_DIR})

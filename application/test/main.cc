@@ -347,10 +347,29 @@ void barrier_test(){
   });//run
 }
 
+// run with >3 nodes
+void test17(){
+  using namespace Charm;  
+  run([]{
+        for(int i = 0 ; i < 10 ; i ++){
+          //call<async>(0, [](int *x){
+          //  *x = 9; 
+          //  sync_printf(node_rank(), thread_rank(), (*x));
+          //});//call
+          call<Charm::blocking>(i, [i](){
+              sync_printf(id());
+          });//call
+        }
+
+      
+    //sync_printf("over");
+  });//run
+}
+
 int main(int argc, char* argv[]){
   using namespace Charm;
   CHARM_Init(&argc, &argv);
-  test11();
+  test17();
   CHARM_Finalize();
   return 0;
 }

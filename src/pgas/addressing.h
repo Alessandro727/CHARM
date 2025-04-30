@@ -84,8 +84,8 @@ public:
   }
 
   inline void create_2D(uint64_t id, T *t){
-    ASSERT( id <= thread_mask, "too many threads, thread num should be less than 32768.");
-    ASSERT( (int64_t)id < cores(), "out of range");
+    ASSERT_CHARM( id <= thread_mask, "too many threads, thread num should be less than 32768.");
+    ASSERT_CHARM( (int64_t)id < cores(), "out of range");
     pointer_ = ( 1L << tag_shift )
              | ( id << thread_shift )
              | ( pointer_mask & (reinterpret_cast<intptr_t>(t)) );

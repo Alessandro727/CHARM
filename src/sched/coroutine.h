@@ -16,12 +16,14 @@
 #ifndef _COROUTINE_H_
 #define _COROUTINE_H_
 
+#ifdef __cplusplus
 #include <iostream>
 #include <cstdio>
 #include <cstdint>
 #include <string>
 #include <cstring>
 #include <functional>
+#endif
 
 #include "sched/context.h"
 #include "tasking/task_queue.h"
@@ -221,7 +223,7 @@ public:
       return ret;
     }else{
       //for(size_t i = 0; i < num_queues; ++i){
-        //ASSERT(queues[i].size() == 0, "all queues is truly empty.");
+        //ASSERT_CHARM(queues[i].size() == 0, "all queues is truly empty.");
       //}
       return NULL;
     }

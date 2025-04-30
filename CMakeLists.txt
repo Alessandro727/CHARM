@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.12)
 
 # Charm
@@ -15,6 +16,10 @@ option(NUMA_AWARE "enable numa aware pgas." ON)
 option(NUMA_BUF "enable numa aware RDMA buf" ON)
 option(COALESCE "enable coalesce" ON)
 option(AGGREGATION "enable aggregation" ON)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+
+set(ENV{BUILD_BENCHMARK} 1)
+set(ENV{BUILD_TPCH} 1)
 
 
 #############################################################################
@@ -30,18 +35,15 @@ else()
   message(WARNING "You are using an unsupported compiler! only tested with GCC.")
 endif()
 
-#set (_LIB_PATH $ENV{LD_LIBRARY_PATH})
-set (_LIB_PATH "/home/mengke/runtime/gperf/lib/")
-set (_INCLUDE_PATH "/home/mengke/runtime/gperf/include/")
-
-
 #############################################################################
 # Configure
 #############################################################################
 
 # configure c++ flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11 -Wall -g -Wno-sign-compare -Wno-unused-variable")
-set(EXTRA_LIBS "-libverbs -lpfm -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11 -fopenmp -Wall -Wno-sign-compare -Wno-unused-variable -fPIC")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g -O1 -std=c++11 -fopenmp -Wall -Wno-sign-compare -Wno-unused-variable -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(EXTRA_LIBS "-libverbs -lpfm -pthread -lgflags")
 
 # configure MPI
 find_package(MPI REQUIRED)
@@ -60,7 +62,6 @@ list(APPEND CHARM_LD_LIBS ${PTHREADS_FOUND})
 
 # configure graph500_generator
 list(APPEND CHARM_STATIC_LIBS ${CMAKE_BINARY_DIR}/tools/generator/libgraph500-generator.a)
-
 
 if(LOGGING)
   message("-- enable logging ")
@@ -92,7 +93,6 @@ if(AGGREGATION)
   message("-- enable aggregation.")
   add_definitions( -DAGGREGATION )
 endif()
-
 
 # configure fast_context_switch
 if(FAST_CONTEXT_SWITCH)

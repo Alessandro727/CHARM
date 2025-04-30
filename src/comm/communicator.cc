@@ -446,7 +446,7 @@ void Communicator::flush_to_node(int me, size_t rank){
 #endif
         ring_buf->clean_one_slot();
         ctx = ring_buf->get_empty_slot();
-        ASSERT(ctx!=NULL, "send contex should not be NULL after poll_cq");
+        ASSERT_CHARM(ctx!=NULL, "send contex should not be NULL after poll_cq");
       }
 
       uint32_t * header = ctx->get_header();
@@ -466,7 +466,7 @@ void Communicator::flush_to_node(int me, size_t rank){
           data = mi.next(&from, &to);// pop a message iterator
 
           if(data != NULL){
-            ASSERT( data->msg.raw_ != 0, "data should not contain no message." );
+            ASSERT_CHARM( data->msg.raw_ != 0, "data should not contain no message." );
             // 1. CAS a message list
             mail_t old_msg;
             do{
@@ -761,7 +761,7 @@ Communicator::~Communicator(){
   size_t node_size = mpi_env->size;
   size_t thread_size = global_scheduler->get_size();
   for(size_t i = 0; i < node_size*thread_size; ++i){
-    ASSERT( simple_msg_map_[i].msg.raw_==0, "Fatal error: destruction with active message"  );
+    ASSERT_CHARM( simple_msg_map_[i].msg.raw_==0, "Fatal error: destruction with active message"  );
   }
   free(simple_msg_map_);
   for(int s_id = 0; s_id < SOCKETS; ++s_id){
@@ -781,7 +781,7 @@ Communicator::~Communicator(){
   size_t thread_size = global_scheduler->get_size();
 
   for(size_t i = 0; i < node_size*thread_size; ++i){
-    ASSERT( simple_msg_map_[i].msg.raw_==0, "Fatal error: destruction with active message"  );
+    ASSERT_CHARM( simple_msg_map_[i].msg.raw_==0, "Fatal error: destruction with active message"  );
   }
   free(simple_msg_map_);
 

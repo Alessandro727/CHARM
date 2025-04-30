@@ -38,19 +38,22 @@ int x=0;
 
 void GUPS(){
   using namespace Charm;
-  const int64_t SZ=1<<30;
-  run([]{
-
+  const int64_t SZ=1<<28; //Bench.sh
+  run([&SZ]{
     auto A = gmalloc<int64_t>(SZ);
     auto B = gmalloc<int64_t>(SZ);
 
-    pfor(B, SZ, [](int64_t* b){
+    pfor(B, SZ, [&SZ](int64_t* b){
       *b = random() % (SZ);
     });
 
     //sync_printf("hello");
     //ProfilerStart("ring.prof");
     //MLOG.on();
+
+  //         PerfCounter e;
+  // e.startCounters();
+
     auto start = time();
     pfor(B, SZ, [A](int64_t i, int64_t* b){
       int64_t x = *b;
@@ -60,7 +63,11 @@ void GUPS(){
         *w ^= i; 
       });
     });//pfor
+
     auto end = time();
+
+  //   e.stopCounters();
+  // e.printReportByLine(std::cout, 1);
     //MLOG.off();
     //ProfilerStop();
 
@@ -88,10 +95,8 @@ void GUPS1(){
       A[B[i]] ^= i;
     }
     auto end = time();
-
     double _time = diff(start, end)/1000000.0;
     double gups = SZ/(_time);
-    std::cout << "GUPS:" << gups << " in " <<  _time  <<  " sec." << std::endl;
   });//run
 }
 

@@ -38,9 +38,9 @@ namespace Charm {
 /* TODO: we can't reuse this MessagePool right now
  * since it will increase the system complexity */
 const int MAX_MESSAGE_SIZE = 1<<10;
-const int MAX_POOL_CNT = MAX_MESSAGE_SIZE / CACHE_LINE_SIZE;
+const int MAX_POOL_CNT = MAX_MESSAGE_SIZE / CHARM_CACHE_LINE_SIZE;
 const int MAX_POOL_CUTOFF = 1<<8;
-const int MAX_POOL_CACHELINE = MAX_POOL_CUTOFF / CACHE_LINE_SIZE;
+const int MAX_POOL_CACHELINE = MAX_POOL_CUTOFF / CHARM_CACHE_LINE_SIZE;
 const int EACH_POOL_SIZE = 1<<15;
 
 class MessagePool{
@@ -50,7 +50,7 @@ public:
   void free(Message* m, size_t size);
 private:
   PoolAllocator pools[MAX_POOL_CNT];
-} CACHE_ALIGNED;
+} CACHE_ALIGNED_CHARM;
 
 
 }//namespace Charm

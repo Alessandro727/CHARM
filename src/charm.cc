@@ -28,15 +28,17 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace Charm{
 
 void CHARM_Init(int* argc, char** argv[]){
+
   /* bring up MPI environment */
   mpi_env = new mpi_env_t();
   mpi_env->mpi_env_init(argc, argv);
 
 #ifdef NUMA_AWARE
-  ASSERT( numa_available() >= 0, "System does not support Numa API.");
+  ASSERT_CHARM( numa_available() >= 0, "System does not support Numa API.");
 #endif
 
   config_available_memory();
+  numa_set_preferred(0);
 
   /* PGAS */
   global_mem_manager = new Vmemory(SHARED_MEMORY_SIZE);

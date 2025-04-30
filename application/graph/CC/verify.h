@@ -44,7 +44,7 @@ inline void verify_cc(EdgeList& el, GlobalAddress<G> g){
     
     auto ci = get_color(g,i), cj = get_color(g,j);
 
-    ASSERT( ci == cj, "neighbor color is not same.");
+    ASSERT_CHARM( ci == cj, "neighbor color is not same.");
   });
 }
 

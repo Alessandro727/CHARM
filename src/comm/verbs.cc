@@ -78,12 +78,12 @@ void C_Ctl::finalize(){
   if( cq || qp ){
     for(int i = 0; i < num_qps; ++i){
       int retval = ibv_destroy_qp( qp[i] );
-      ASSERT( 0==retval, "Failed to destroy conn qp ");
+      ASSERT_CHARM( 0==retval, "Failed to destroy conn qp ");
     }
     free(qp);
     for(int i = 0; i < num_qps; ++i){
       int retval = ibv_destroy_cq( cq[i] );
-      ASSERT( 0==retval, "Failed to destroy conn cq ");
+      ASSERT_CHARM( 0==retval, "Failed to destroy conn cq ");
     }
     free(cq);
   }
@@ -96,12 +96,12 @@ void C_Ctl::_create_qps(){
   // malloc qps and cps
   qp = (struct ibv_qp **) malloc(num_qps * sizeof(struct ibv_qp *));
   cq = (struct ibv_cq **) malloc(num_qps * sizeof(struct ibv_cq *));
-  ASSERT( qp!=NULL && cq!=NULL, "Failed to malloc memory for qp ans cq");
+  ASSERT_CHARM( qp!=NULL && cq!=NULL, "Failed to malloc memory for qp ans cq");
 
   for(int i = 0; i < num_qps; ++i){
     //create cq
     cq[i] = ibv_create_cq( context, DFT_Q_DEPTH, NULL, NULL, 0 );
-    ASSERT( cq[i]!=NULL, "Failed to create cq");
+    ASSERT_CHARM( cq[i]!=NULL, "Failed to create cq");
 
 #if USE_UC
     //create qp
@@ -117,7 +117,7 @@ void C_Ctl::_create_qps(){
     init_attr.cap.max_inline_data = DFT_MAX_INLINE;
 
     qp[i] = ibv_create_qp(protection_domain, &init_attr);
-    ASSERT( qp[i]!=NULL, "Faild to create conn qp");
+    ASSERT_CHARM( qp[i]!=NULL, "Faild to create conn qp");
 
     // move to INIT
     struct ibv_qp_attr attr;
@@ -132,7 +132,7 @@ void C_Ctl::_create_qps(){
         | IBV_QP_PKEY_INDEX
         | IBV_QP_PORT
         | IBV_QP_ACCESS_FLAGS);
-    ASSERT( 0==retval, "Failed to transit conn QP to INIT")
+    ASSERT_CHARM( 0==retval, "Failed to transit conn QP to INIT")
 #endif
 
 #if USE_RC
@@ -150,7 +150,7 @@ void C_Ctl::_create_qps(){
     init_attr.cap.max_inline_data = DFT_MAX_INLINE;
 
     qp[i] = ibv_create_qp(protection_domain, &init_attr);
-    ASSERT( qp[i]!=NULL, "Faild to create qp");
+    ASSERT_CHARM( qp[i]!=NULL, "Faild to create qp");
 
     // move to INIT
     struct ibv_qp_attr attr;
@@ -167,7 +167,7 @@ void C_Ctl::_create_qps(){
         | IBV_QP_PKEY_INDEX
         | IBV_QP_PORT
         | IBV_QP_ACCESS_FLAGS);
-    ASSERT( 0==retval, "Failed to transit conn QP to INIT")
+    ASSERT_CHARM( 0==retval, "Failed to transit conn QP to INIT")
 #endif
   }
 }
@@ -190,7 +190,7 @@ void C_Ctl::_exchange_remote_qp_info(uint64_t* rm_recv_buf){
 #endif
   int is_inited = 0;
   MPI_Initialized( &is_inited );
-  ASSERT( is_inited, "MPI env should be initialized first" );
+  ASSERT_CHARM( is_inited, "MPI env should be initialized first" );
 
   /* how many remote qp info should I keep */
   int _size = mpi_env->size;
@@ -250,8 +250,8 @@ void C_Ctl::_exchange_remote_qp_info(uint64_t* rm_recv_buf){
 }
 
 void C_Ctl::__connect_qps(int i, struct remote_qp_attr_t *remote_qp_attr ){
-  ASSERT( i>=0 && i<num_qps, "invalid arg i");
-  ASSERT( qp[i] != NULL, "target qp is invalid" );
+  ASSERT_CHARM( i>=0 && i<num_qps, "invalid arg i");
+  ASSERT_CHARM( qp[i] != NULL, "target qp is invalid" );
 
 #if USE_UC
   struct ibv_qp_attr conn_attr;
@@ -275,7 +275,7 @@ void C_Ctl::__connect_qps(int i, struct remote_qp_attr_t *remote_qp_attr ){
        | IBV_QP_DEST_QPN
        | IBV_QP_RQ_PSN
        | IBV_QP_AV );
-  ASSERT(0==retval, "Failed to transit QP to RTR");
+  ASSERT_CHARM(0==retval, "Failed to transit QP to RTR");
 
   // move to RTS
   memset(&conn_attr, 0, sizeof(struct ibv_qp_attr));
@@ -285,7 +285,7 @@ void C_Ctl::__connect_qps(int i, struct remote_qp_attr_t *remote_qp_attr ){
   retval = ibv_modify_qp( qp[i], &conn_attr
       , IBV_QP_STATE
       | IBV_QP_SQ_PSN );
-  ASSERT(0==retval, "Failed to transit QP to RTS");
+  ASSERT_CHARM(0==retval, "Failed to transit QP to RTS");
 #endif
 #if USE_RC
   struct ibv_qp_attr conn_attr;
@@ -314,7 +314,7 @@ void C_Ctl::__connect_qps(int i, struct remote_qp_attr_t *remote_qp_attr ){
        | IBV_QP_AV 
        | IBV_QP_MAX_DEST_RD_ATOMIC
        | IBV_QP_MIN_RNR_TIMER );
-  ASSERT(0==retval, "Failed to transit QP to RTR");
+  ASSERT_CHARM(0==retval, "Failed to transit QP to RTR");
 
   // move to RTS
   memset(&conn_attr, 0, sizeof(struct ibv_qp_attr));
@@ -332,7 +332,7 @@ void C_Ctl::__connect_qps(int i, struct remote_qp_attr_t *remote_qp_attr ){
       | IBV_QP_RETRY_CNT
       | IBV_QP_RNR_RETRY
       | IBV_QP_MAX_QP_RD_ATOMIC);
-  ASSERT(0==retval, "Failed to transit QP to RTS");
+  ASSERT_CHARM(0==retval, "Failed to transit QP to RTS");
 #endif
 }
 
@@ -366,7 +366,7 @@ void C_Ctl::post_RDMA_write_single(int rank, int which_numa, uint8_t* msg, int s
   wr.wr.rdma.rkey = remote_qps[rank].rkey[which_numa];
 
   int retval = ibv_post_send( qp[rank], &wr, &bad_send_wr );
-  ASSERT( 0==retval, "Failed to post a single RDMA WRITE wr" );
+  ASSERT_CHARM( 0==retval, "Failed to post a single RDMA WRITE wr" );
 }
 
 bool C_Ctl::post_RDMA_write_batch(int rank, int which_numa, const std::vector<struct RDMA_pack_t>& pack, uint32_t lkey){
@@ -395,7 +395,7 @@ bool C_Ctl::post_RDMA_write_batch(int rank, int which_numa, const std::vector<st
   /* if DFT_QP_DEPTH is too small, it will throw a error */
   int retval = ibv_post_send( qp[rank], &wr[0], &bad_send_wr );
   //sync_printf("rdma post :",rank,which_numa,remote_qps[rank].rdma_buf[which_numa]);
-  //ASSERT( 0==retval, "Failed to post a batch RDMA WRITE wr" );
+  //ASSERT_CHARM( 0==retval, "Failed to post a batch RDMA WRITE wr" );
   if(retval == 0) return true;
   else return false;
 }
@@ -426,7 +426,7 @@ bool C_Ctl::post_RDMA_write_raw(int rank, int which_numa, uint64_t inline_data,
 
   // inline can be reuse after this end
   int retval = ibv_post_send( qp[rank], &wr, &bad_send_wr );
-  //ASSERT( 0==retval, "Failed to post a raw inline RDMA WRITE wr" );
+  //ASSERT_CHARM( 0==retval, "Failed to post a raw inline RDMA WRITE wr" );
   if(retval == 0 ) return true;
   else return false;
 }
@@ -456,7 +456,7 @@ void C_Ctl::post_RDMA_write_single(int rank, uint8_t* msg, int size, int offset,
   wr.wr.rdma.rkey = remote_qps[rank].rkey;
 
   int retval = ibv_post_send( qp[rank], &wr, &bad_send_wr );
-  ASSERT( 0==retval, "Failed to post a single RDMA WRITE wr" );
+  ASSERT_CHARM( 0==retval, "Failed to post a single RDMA WRITE wr" );
 }
 
 bool C_Ctl::post_RDMA_write_batch(int rank, const std::vector<struct RDMA_pack_t>& pack, uint32_t lkey){
@@ -486,7 +486,7 @@ bool C_Ctl::post_RDMA_write_batch(int rank, const std::vector<struct RDMA_pack_t
   }
   /* if DFT_QP_DEPTH is too small, it will throw a error */
   int retval = ibv_post_send( qp[rank], &wr[0], &bad_send_wr );
-  //ASSERT( 0==retval, "Failed to post a batch RDMA WRITE wr" );
+  //ASSERT_CHARM( 0==retval, "Failed to post a batch RDMA WRITE wr" );
   //free(wr);
   //free(sgl);
   if(retval == 0) return true;
@@ -519,7 +519,7 @@ bool C_Ctl::post_RDMA_write_raw(int rank, uint64_t inline_data,
 
   // inline can be reuse after this end
   int retval = ibv_post_send( qp[rank], &wr, &bad_send_wr );
-  //ASSERT( 0==retval, "Failed to post a raw inline RDMA WRITE wr" );
+  //ASSERT_CHARM( 0==retval, "Failed to post a raw inline RDMA WRITE wr" );
   if(retval == 0 ) return true;
   else return false;
 }
@@ -534,9 +534,9 @@ bool C_Ctl::poll_cq(int rank, int num){
   int new_comps = ibv_poll_cq(t_cq, 1, &wc);
   //if(node_rank() == 0 && thread_rank() == 1) sync_printf("here");
   if( new_comps !=0 ){
-    ASSERT( new_comps>0, "Fatal error, poll failed");
+    ASSERT_CHARM( new_comps>0, "Fatal error, poll failed");
     //printf("%s\n", ibv_wc_status_str(wc.status));
-    ASSERT( wc.status==IBV_WC_SUCCESS, "Fatal error, work not complete" );
+    ASSERT_CHARM( wc.status==IBV_WC_SUCCESS, "Fatal error, work not complete" );
     //printf("%d Yes", mpi_env->get_rank());
     //comps ++;
     return true;
@@ -549,8 +549,8 @@ bool C_Ctl::poll_cq(int rank, int num){
 
 Verbs::Verbs(){
   init_device();
-  ASSERT(context!=NULL, "please open device first");
-  ASSERT(protection_domain!=NULL, "please open device first");
+  ASSERT_CHARM(context!=NULL, "please open device first");
+  ASSERT_CHARM(protection_domain!=NULL, "please open device first");
   c_ctl = NULL;
 }
 
@@ -602,7 +602,7 @@ void Verbs::init_device( const char* target_device_name, uint8_t target_port){
   // 1. get device list
   int num_devices = 0;
   ibv_device ** devices = ibv_get_device_list( &num_devices );
-  ASSERT( devices!=NULL, "no Verbs devices found!");
+  ASSERT_CHARM( devices!=NULL, "no Verbs devices found!");
   // 2. get target device
   device = NULL;
   if(num_devices == 1){
@@ -623,24 +623,24 @@ void Verbs::init_device( const char* target_device_name, uint8_t target_port){
     }
   }
 
-  ASSERT( device!=NULL, "Failed to find target device" );
+  ASSERT_CHARM( device!=NULL, "Failed to find target device" );
 
   // 3. open context
   context = ibv_open_device( device );
-  ASSERT( context!=NULL, "Failed to open target device context" );
+  ASSERT_CHARM( context!=NULL, "Failed to open target device context" );
 
   // 4. get device attr
   int retval = ibv_query_device( context, &device_attr );
-  ASSERT( 0==retval, "Failed to get device attributes" );
+  ASSERT_CHARM( 0==retval, "Failed to get device attributes" );
 
   // 5. get port attr
   port = target_port;
   retval = ibv_query_port( context, port, &port_attr);
-  ASSERT( 0==retval, "Failed to get port attributes" );
+  ASSERT_CHARM( 0==retval, "Failed to get port attributes" );
 
   // 6. create protection domain
   protection_domain = ibv_alloc_pd( context ); 
-  ASSERT( protection_domain!=NULL, "Failed to alloc protection domain")
+  ASSERT_CHARM( protection_domain!=NULL, "Failed to alloc protection domain")
 }
 
 /* Destroy all resource */
@@ -654,14 +654,14 @@ void Verbs::finalize(){
   /* clean protection domain */
   if( protection_domain ){
     int retval = ibv_dealloc_pd( protection_domain );
-    ASSERT( 0==retval, "Failed destroy protectiondomain ");
+    ASSERT_CHARM( 0==retval, "Failed destroy protectiondomain ");
     protection_domain = NULL;
   }
 
   /* clean context */
   if( context ){
     int retval = ibv_close_device( context );
-    ASSERT( 0==retval, "Failed to destroy context " );
+    ASSERT_CHARM( 0==retval, "Failed to destroy context " );
     context = NULL;
   }
   /* clear device ptr */
@@ -694,13 +694,13 @@ void Verbs::post_RDMA_write_single(int rank, int which_numa, uint8_t* msg, int s
 void Verbs::post_RDMA_write_batch(int rank, int which_numa, std::vector<struct RDMA_pack_t> pack){
   bool retval = false;
   retval = c_ctl[which_numa]->post_RDMA_write_batch(rank, which_numa, pack, pinned_buffer[which_numa]->lkey);
-  ASSERT( retval, "Failed to post a batch RDMA WRITE wr" );
+  ASSERT_CHARM( retval, "Failed to post a batch RDMA WRITE wr" );
 }
 
 void Verbs::post_RDMA_write_raw(int rank, int which_numa, uint32_t inline_data, uint32_t* target_addr){
   bool retval = false;
   retval = c_ctl[which_numa]->post_RDMA_write_raw(rank, which_numa, inline_data, target_addr, pinned_buffer[which_numa]->lkey);
-  ASSERT( retval, "Failed to post a raw inline RDMA WRITE wr" );
+  ASSERT_CHARM( retval, "Failed to post a raw inline RDMA WRITE wr" );
 }
 
 void Verbs::poll_cq(int rank, int which_numa, int num){
@@ -725,7 +725,7 @@ void Verbs::post_RDMA_write_batch(int rank, std::vector<struct RDMA_pack_t> pack
     retval = c_ctl[i]->post_RDMA_write_batch(rank, pack, pinned_buffer->lkey);
     if(retval) break;
   }
-  ASSERT( retval, "Failed to post a batch RDMA WRITE wr" );
+  ASSERT_CHARM( retval, "Failed to post a batch RDMA WRITE wr" );
 }
 void Verbs::post_RDMA_write_raw(int rank, uint32_t inline_data, uint32_t* target_addr){
   bool retval = false;
@@ -734,7 +734,7 @@ void Verbs::post_RDMA_write_raw(int rank, uint32_t inline_data, uint32_t* target
     retval = c_ctl[i]->post_RDMA_write_raw(rank, inline_data, target_addr, pinned_buffer->lkey);
     if(retval) break;
   }
-  ASSERT( retval, "Failed to post a raw inline RDMA WRITE wr" );
+  ASSERT_CHARM( retval, "Failed to post a raw inline RDMA WRITE wr" );
 }
 
 void Verbs::poll_cq(int rank, int num){

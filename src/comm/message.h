@@ -132,8 +132,8 @@ public:
 
   //TODO: delivery cost time in free phase, maybe freeing lambda is the bottleneck.
   void delivery(){
-    ASSERT((int)(to_id/THREAD_SIZE) == mpi_env->rank, "delivery Message to wrong node.");
-    ASSERT(false, "too bad");
+    ASSERT_CHARM((int)(to_id/THREAD_SIZE) == mpi_env->rank, "delivery Message to wrong node.");
+    ASSERT_CHARM(false, "too bad");
     //global_scheduler->private_enqueue( to_id%THREAD_SIZE, rpc);
   }
 

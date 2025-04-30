@@ -17,7 +17,7 @@ thread_local int64_t frontier_head;
 thread_local int64_t frontier_tail;
 thread_local int64_t frontier_level_mark;
 
-void frontier_push(int64_t v) { frontier[frontier_tail++] = v; ASSERT(frontier_tail < frontier_sz, "frontier push error"); }
+void frontier_push(int64_t v) { frontier[frontier_tail++] = v; ASSERT_CHARM(frontier_tail < frontier_sz, "frontier push error"); }
 int64_t frontier_pop() { return frontier[frontier_head++]; }
 int64_t frontier_next_level_size() { return frontier_tail - frontier_level_mark; }
 

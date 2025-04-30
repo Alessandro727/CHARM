@@ -30,7 +30,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace Charm;
 
-const int scale = 18;
+const int scale = 24; // Bench.sh
 const int edgefactor = 16;
 
 void pagerank(EdgeList& el, GlobalAddress<G> g){
@@ -56,7 +56,14 @@ int main(int argc, char* argv[]){
     //tg = EdgeList::Load("/mnt/lustre/mengke/twitter/out.twitter", "tsv");
 
     auto g = G::Undirected(el, false);
+
+  //         PerfCounter e;
+  // e.startCounters();
+    
     pagerank(el, g);
+
+  //   e.stopCounters();
+  // e.printReportByLine(std::cout, 1);
 
     mlog_dump();
   });

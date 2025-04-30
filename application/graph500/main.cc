@@ -41,7 +41,7 @@ using namespace Charm;
 //const int scale = 18;
 //const int edgefactor = 32;
 
-const int scale = 24;
+const int scale = 24; //Bench.sh
 const int edgefactor = 16;
 const int NBFS_max = 32;
 const int BFS_num = 8;
@@ -169,7 +169,12 @@ void graph500(){
   _time = diff(start, end)/1000000.0;
   std::cout << "create graph : " <<  _time  <<  " sec." << std::endl;
 
+  //       PerfCounter e;
+  // e.startCounters();
+
   bfs_benchmark(tg, g, BFS_num);
+  // e.stopCounters();
+  // e.printReportByLine(std::cout, 1);
 }
 
 

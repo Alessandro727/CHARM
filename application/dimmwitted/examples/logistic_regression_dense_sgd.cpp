@@ -17,6 +17,9 @@
 #define _GLM_DENSE_SGD_H
 
 #include "dimmwitted.h"
+#include <chrono>
+#include <thread>
+
 
 /**
  * \brief A model object. This model contains
@@ -128,8 +131,12 @@ double test_glm_dense_sgd(){
   // nfeat + 1 columns, where the last column
   // is the label that we want to train on.
   // 
-  long nexp = 100000; // number of rows
-  long nfeat = 1024;  // number of features
+//  long nexp = 100000; // number of rows
+//  long nfeat = 1024;  // number of features
+
+  long nexp = 100000; // Bench.sh
+  long nfeat = 8192;  // number of features
+
   double ** examples = new double* [nexp];  // pointers to each row
   double * content = new double[nexp*(nfeat+1)];  // buffer to actually hold objects
   for(long i=0;i<nexp;i++){
@@ -172,7 +179,7 @@ double test_glm_dense_sgd(){
   //   2. sum the model (only for getting statistics)
   //   3. update the model
   //
-  double sum = 0.0;
+/*  double sum = 0.0;
   for(int i_epoch=0;i_epoch<2;i_epoch++){
     double loss = dw.exec(f_handle_loss)/nexp;
     sum = 0.0;
@@ -193,7 +200,43 @@ double test_glm_dense_sgd(){
   // Return the sum of the model. This value should be 
   // around 1.3-1.4 for this example.
   //
+  return sum;*/
+
+  double sum = 0.0;
+
+  double total_time = 0.0;
+  double total_throughput = 0.0;
+  int n_epoch = 10;
+  for(int i_epoch=0;i_epoch<n_epoch;i_epoch++){
+    double loss = dw.exec(f_handle_loss)/nexp;
+    sum = 0.0;
+    for(int i=0;i<nfeat;i++){
+      sum += model.p[i];
+    }
+    std::cout.precision(8);
+    std::cout << sum << "    loss=" << loss << std::endl;
+
+    Timer t;
+    dw.exec(f_handle_grad);
+    double data_byte = 1.0 * sizeof(double) * nexp * nfeat;
+    double te = t.elapsed();
+    double throughput_gb = data_byte / te / 1024 / 1024 / 1024;
+    total_time += te;
+    total_throughput += throughput_gb;
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::cout << "TIME=" << te << " secs" << " THROUGHPUT=" << throughput_gb << " GB/sec." << std::endl;
+  }
+
+    double average_time = total_time / n_epoch;
+    double average_throughput = total_throughput / n_epoch;
+    std::cout << "AVERAGE TIME=" << average_time << " secs" << " AVERAGE THROUGHPUT=" << average_throughput << " GB/sec." << std::endl;
+
+  // Return the sum of the model. This value should be 
+  // around 1.3-1.4 for this example.
+  //
   return sum;
+
+
 }
 
 #endif

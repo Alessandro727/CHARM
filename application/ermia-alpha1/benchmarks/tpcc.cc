@@ -23,6 +23,8 @@
 #include "bench.h"
 #include "tpcc.h"
 
+#include "charm.h"
+
 static ALWAYS_INLINE size_t NumWarehouses() {
   return (size_t)ermia::config::benchmark_scale_factor;
 }
@@ -2707,7 +2709,10 @@ void tpcc_do_test(ermia::Engine *db, int argc, char **argv) {
   }
 
   tpcc_bench_runner r(db);
+  //Charm::run([&r]{    
   r.run();
+
+  //});
 }
 
 rc_t tpcc_cmdlog_redoer::txn_new_order(uint warehouse_id) {

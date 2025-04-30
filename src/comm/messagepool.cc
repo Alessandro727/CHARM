@@ -30,7 +30,7 @@ namespace Charm{
 
 void MessagePool::init(int which_numa){
   for(int i = 0; i < MAX_POOL_CNT; ++i){
-    size_t object_size = (i+1) * CACHE_LINE_SIZE;
+    size_t object_size = (i+1) * CHARM_CACHE_LINE_SIZE;
     size_t preset_num = EACH_POOL_SIZE / object_size;
 
     // bigger than MAX_POOL_CUTOFF message will just allocate 1 chunk.
@@ -43,12 +43,12 @@ void MessagePool::init(int which_numa){
 }
 
 void* MessagePool::alloc(size_t size){
-  size_t sz = (size_t)ALIGN_UP(size, CACHE_LINE_SIZE);
-  size_t cacheline_cnt = sz / CACHE_LINE_SIZE; // 53 / 64 == 0
+  size_t sz = (size_t)ALIGN_UP(size, CHARM_CACHE_LINE_SIZE);
+  size_t cacheline_cnt = sz / CHARM_CACHE_LINE_SIZE; // 53 / 64 == 0
 
   if( sz > MAX_MESSAGE_SIZE ){
     // use heap allocation
-    return align_alloc<char>(CACHE_LINE_SIZE, sz);
+    return align_alloc<char>(CHARM_CACHE_LINE_SIZE, sz);
     msg_on_heap ++ ;
   }else{
     switch(cacheline_cnt){
@@ -64,8 +64,8 @@ void* MessagePool::alloc(size_t size){
 }
 
 void MessagePool::free(Message* m, size_t size){
-  size_t sz = (size_t)ALIGN_UP(size, CACHE_LINE_SIZE);
-  size_t cacheline_cnt = sz / CACHE_LINE_SIZE; 
+  size_t sz = (size_t)ALIGN_UP(size, CHARM_CACHE_LINE_SIZE);
+  size_t cacheline_cnt = sz / CHARM_CACHE_LINE_SIZE; 
 
   if( sz > MAX_MESSAGE_SIZE){
     // use heap free (no reuse)

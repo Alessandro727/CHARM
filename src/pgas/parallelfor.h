@@ -147,7 +147,6 @@ void assign_task(GlobalAddress<T> base, int64_t size, F task){
 // work is void(int64_t start, int64_t size, T* first)
 template<SyncMode S, typename T, typename F>
 void pfor(GlobalAddress<T> A, int64_t size, F loop_body, void(F::*pf)(int64_t,int64_t,T*) const){
-
   // split loop to each core
   auto task = [loop_body, A](int64_t local_start, int64_t local_size, T* local_base){
     pfor_local<S>(0, local_size, [loop_body, local_base, A](int64_t s, int64_t n){
@@ -180,7 +179,7 @@ void pfor(GlobalAddress<T> A, int64_t size, F work, void(F::*pf)(int64_t,T*) con
     auto index = start;
     auto a = make_linear(first);
     auto n_to_boundary = block_elems - (a - a.block_first());
-    ASSERT(n_to_boundary > 0, "something wrong in pfor with idx");
+    ASSERT_CHARM(n_to_boundary > 0, "something wrong in pfor with idx");
 
     for(int64_t i = 0; i < n; i++,index++,n_to_boundary--){
       if(n_to_boundary == 0){ // should jump 

@@ -67,7 +67,7 @@ ChunkMap::iterator
 Allocator::add_to_chunkmap(const Chunk& chunk){
   //std::pair<ChunkMap::iterator, bool>
   auto res = chunks.insert( std::make_pair(chunk.addr, chunk) );
-  ASSERT( res.second, "add_to_chunkmap failed");
+  ASSERT_CHARM( res.second, "add_to_chunkmap failed");
   return res.first;
 }
 
@@ -97,7 +97,7 @@ Allocator::Allocator(int which_numa, int64_t size, bool vmode=false)
     , chunks()
     , freelists() {
 
-   ASSERT( size > 0, "size should be a positive integer" );
+   ASSERT_CHARM( size > 0, "size should be a positive integer" );
 
    if(vmode){
      base = 0;
@@ -108,7 +108,7 @@ Allocator::Allocator(int which_numa, int64_t size, bool vmode=false)
 #else
      char* tmp = (char*)malloc( size * sizeof(char) );
 #endif
-     ASSERT(tmp != NULL, "allocated memory failed");
+     ASSERT_CHARM(tmp != NULL, "allocated memory failed");
      memset(tmp, 0, size*sizeof(char));
      base = reinterpret_cast<uintptr_t>(tmp);
    }
@@ -136,7 +136,7 @@ Allocator::Allocator(int64_t size, bool vmode=false)
     , chunks()
     , freelists() {
 
-   ASSERT( size > 0, "size should be a positive integer" );
+   ASSERT_CHARM( size > 0, "size should be a positive integer" );
 
    if(vmode){
      base = 0;
@@ -178,7 +178,7 @@ void*
 Allocator::xmalloc(size_t size){
   int64_t _size = next_largest_power_of_2(size);
   auto it = freelists.lower_bound( _size );
-//  ASSERT(it != freelists.end(), "Fatal error: OOM" );
+  ASSERT_CHARM(it != freelists.end(), "Fatal error: OOM" );
 
   int64_t chunk_size = it->first;
   auto chunk_it = it->second.front();
@@ -205,7 +205,7 @@ void
 Allocator::xfree(void * addr){
   uintptr_t _addr = reinterpret_cast<uintptr_t>(addr) - base;
   auto free_it = chunks.find(_addr);
-  ASSERT( free_it != chunks.end() && free_it->second.used == true, "no way to free a invalid block");
+  ASSERT_CHARM( free_it != chunks.end() && free_it->second.used == true, "no way to free a invalid block");
   add_to_freelist(free_it);
   merge_buddy_recursive(free_it);
 }

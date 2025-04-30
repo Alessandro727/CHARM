@@ -16,7 +16,6 @@
 
 /* Assumed size of a cache line. */
 #define CACHE_LINE_SIZE 64
-
 /* Define to enable debugging assertions. */
 #define ENABLE_ASSERTIONS 1
 

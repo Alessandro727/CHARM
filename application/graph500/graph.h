@@ -110,8 +110,8 @@ struct Graph {
 
     // count the outgoing/undirected edges per vertex
     pfor(tg.edges, tg.nedge, [g,directed](packed_edge* e){
-      ASSERT( e->v0 < g->nv, "e.v0 < g->nv");
-      ASSERT( e->v1 < g->nv, "e.v1 < g->nv");
+      ASSERT_CHARM( e->v0 < g->nv, "e.v0 < g->nv");
+      ASSERT_CHARM( e->v1 < g->nv, "e.v1 < g->nv");
       auto count = [](GlobalAddress<V> v){
         call<async>(v.get_id(), [v]{ v->local_sz++; });
       };
@@ -144,7 +144,7 @@ struct Graph {
   
     // sort & de-dup
     pfor(g->vs, g->nv, [g](int64_t vi, V* v){
-      ASSERT( v->nadj == v->local_sz, "Vertex's adjancencies not right.");
+      ASSERT_CHARM( v->nadj == v->local_sz, "Vertex's adjancencies not right.");
       std::sort(v->local_adj, v->local_adj+v->nadj);
          
       int64_t tail = 0;
@@ -175,7 +175,7 @@ struct Graph {
         v.local_adj = adj;
         adj += v.nadj;
       }
-      ASSERT(adj - g->adj_buf == g->nadj_local, "compact error");
+      ASSERT_CHARM(adj - g->adj_buf == g->nadj_local, "compact error");
     });
     sync_printf("compact adjacencies to one long buf per core.");
 
@@ -183,6 +183,6 @@ struct Graph {
     return g;
   }
   
-} CACHE_ALIGNED;
+} CACHE_ALIGNED_CHARM;
 
 #endif

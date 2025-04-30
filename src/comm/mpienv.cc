@@ -46,7 +46,7 @@ void mpi_env_t::mpi_env_init(int *argc, char** argv[]){
   int num = 0;
   MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &_tmp_comm);
   MPI_Comm_size(_tmp_comm, &num);
-  ASSERT( num==1, "Every node should have only one MPI process" );
+  ASSERT_CHARM( num==1, "Every node should have only one MPI process" );
 }
 
 void mpi_env_t::mpi_env_finalize(){

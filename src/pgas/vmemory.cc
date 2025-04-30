@@ -28,7 +28,7 @@ Vmemory::Vmemory(size_t total_shared_size)
   , my_pm_base_( size_per_core_ )
   , allocator_( size_per_node_ * node_size(), true){
     partition_mem_base = (intptr_t*)malloc( (int64_t)THREAD_SIZE*sizeof(intptr_t) );
-    ASSERT(partition_mem_base != NULL, "malloc pgas memory failed!");
+    ASSERT_CHARM(partition_mem_base != NULL, "malloc pgas memory failed!");
     for(size_t i = 0; i < THREAD_SIZE;  ++i)
       partition_mem_base[i] = get_base(i); 
   }

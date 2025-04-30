@@ -190,7 +190,7 @@ void generate_kronecker_range(
        edges_ptr_t edges) {
   mrg_state state;
   int64_t nverts = (int64_t)1 << logN;
-
+  
   mrg_seed(&state, seed);
 
   uint64_t val0, val1; /* Values for scrambling */
@@ -206,7 +206,8 @@ void generate_kronecker_range(
   }
 
 #ifdef _CHARM
-  Charm::pfor(edges+start_edge, end_edge-start_edge,
+
+    Charm::pfor(edges+start_edge, end_edge-start_edge,
       [nverts, logN, state, val0, val1](int64_t index, packed_edge* edge){
         mrg_state new_state = state;
         mrg_skip(&new_state, 0, index, 0);

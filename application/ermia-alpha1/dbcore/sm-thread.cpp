@@ -29,7 +29,9 @@ bool DetectCPUCores() {
 
   for (uint32_t node = 0; node < numa_max_node() + 1; ++node) {
     uint32_t cpu = 0;
+    
     while (cpu < std::thread::hardware_concurrency()) {
+    //  while (cpu < 8) {
       std::string dir_name = "/sys/devices/system/node/node" +
                               std::to_string(node) + "/cpu" + std::to_string(cpu);
       struct stat info;
@@ -88,8 +90,8 @@ Thread::Thread()
   ALWAYS_ASSERT(!config::threadpool);
 
   int rc = pthread_attr_init (&thd_attr);
-  pthread_create(&thd, &thd_attr, &Thread::StaticIdleTask, (void *)this);
-  ALWAYS_ASSERT(rc == 0);
+  //pthread_create(&thd, &thd_attr, &Thread::StaticIdleTask, (void *)this);
+  //ALWAYS_ASSERT(rc == 0);
 }
 
 Thread::Thread(uint16_t n, uint16_t c, uint32_t sys_cpu, bool is_physical)
@@ -103,15 +105,17 @@ Thread::Thread(uint16_t n, uint16_t c, uint32_t sys_cpu, bool is_physical)
       is_physical(is_physical) {
   int rc = pthread_attr_init (&thd_attr);
   pthread_create(&thd, &thd_attr, &Thread::StaticIdleTask, (void *)this);
+  
   //cpu_set_t cpuset;
   //CPU_ZERO(&cpuset);
   //CPU_SET(sys_cpu, &cpuset);
   //rc = pthread_setaffinity_np(thd, sizeof(cpu_set_t), &cpuset);
-  LOG(INFO) << "Binding thread " << core << " on node " << node << " to CPU " << sys_cpu;
+  //LOG(INFO) << "Binding thread " << core << " on node " << node << " to CPU " << sys_cpu;
   //ALWAYS_ASSERT(rc == 0);
 }
 
 PerNodeThreadPool::PerNodeThreadPool(uint16_t n) : node(n), bitmap(0UL) {
+  std::cout << "THREAD ALLOCATION \n";
   //ALWAYS_ASSERT(!numa_run_on_node(node));
   threads = (Thread *)numa_alloc_onnode(
       sizeof(Thread) * max_threads_per_node, 0);
@@ -144,6 +148,7 @@ void Initialize() {
   if (config::threadpool) {
     num_thread_pools = numa_max_node() + 1;
     PerNodeThreadPool::max_threads_per_node = std::thread::hardware_concurrency() / num_thread_pools;
+    //PerNodeThreadPool::max_threads_per_node = 8;
     thread_pools =
         (PerNodeThreadPool *)malloc(sizeof(PerNodeThreadPool) * num_thread_pools);
     for (uint16_t i = 0; i < num_thread_pools; i++) {

@@ -53,14 +53,14 @@ inline size_t round_up_page_size( size_t s ) {
 inline void config_available_memory(){
   long pages = sysconf(_SC_PHYS_PAGES);
   long page_size = sysconf(_SC_PAGE_SIZE);
-  //ASSERT(MEMORY_FRACTION + PGAS_FRACTION < 1, "Desired memory out of range(more than 100% of the node memory)")
+  //ASSERT_CHARM(MEMORY_FRACTION + PGAS_FRACTION < 1, "Desired memory out of range(more than 100% of the node memory)")
   uint64_t node_memory = pages*page_size;
   double used_node_memory = node_memory*MEMORY_FRACTION;
   double comm_memory = used_node_memory*COMM_FRACTION;
   double pool_memory = used_node_memory*POOL_FRACTION / THREAD_SIZE;
   COMM_MEMORY_SIZE = round_up_page_size((size_t)comm_memory);
   POOL_MAX_SIZE = round_up_page_size((size_t)pool_memory);
-  ASSERT(COMM_MEMORY_SIZE > node_size()*(sizeof(size_t) + MSG_SIZE*MSG_NUM*2 ), "communication memory is not enough.");
+//  ASSERT_CHARM(COMM_MEMORY_SIZE > node_size()*(sizeof(size_t) + MSG_SIZE*MSG_NUM*2 ), "communication memory is not enough.");
 
   size_t per_node_pgas = PGAS_MEMORY_SIZE;
   SHARED_MEMORY_SIZE = node_size() * round_up_page_size((size_t)per_node_pgas) * 2;
@@ -100,12 +100,12 @@ public:
     for(size_t i = 0; i < THREAD_SIZE; ++i){
 #ifdef NUMA_AWARE
       int which_numa = i / threads_per_node;
-      mem = (void*)numa_alloc_onnode(size_per_core, which_numa);
-      //mem = (void*)malloc(size_per_core);
+      // mem = (void*)numa_alloc_onnode(size_per_core, which_numa);
+      mem = (void*)malloc(size_per_core);
 #else
       posix_memalign( &mem, 64, size_per_core); 
 #endif
-      ASSERT(mem != NULL, "aligned alloc failed!");
+      ASSERT_CHARM(mem != NULL, "aligned alloc failed!");
       base_[i] = reinterpret_cast<intptr_t>(mem);
     }
   }

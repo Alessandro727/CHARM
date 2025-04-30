@@ -202,12 +202,12 @@ void Coro_Scheduler::coroutine_yield(){
 void Coro_Scheduler::coroutine_suspend(){
   Coroutine* coro = executant_;
   //if(coro->is_periodic_) sync_printf("you are", coro->tag_);
-  ASSERT(coro->is_periodic_ == false, "suspend periodic coroutine is not allowed");
+  ASSERT_CHARM(coro->is_periodic_ == false, "suspend periodic coroutine is not allowed");
 
   Coroutine* next_coro = _next_coro();
 
-  ASSERT( next_coro != NULL, "_next_coro should never return NULL." );
-  ASSERT( next_coro != coro || coro->idle_ == 1, "wake idle coroutine instantly");
+  ASSERT_CHARM( next_coro != NULL, "_next_coro should never return NULL." );
+  ASSERT_CHARM( next_coro != coro || coro->idle_ == 1, "wake idle coroutine instantly");
 
   executant_ = next_coro;
 

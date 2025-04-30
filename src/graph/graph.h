@@ -77,7 +77,7 @@ struct Vertex : public VertexBase {
 
   Vertex(): VertexBase(), data(){}
   Vertex(const VertexBase& v): VertexBase(v), data(){}
-} CACHE_ALIGNED;
+} CACHE_ALIGNED_CHARM;
 
 
 
@@ -197,8 +197,8 @@ struct Graph {
   static void count_edge(const EdgeList& el, GlobalAddress<Graph>& g, bool directed){
     // count the outgoing/undirected edges per vertex
     pfor(el.edges, el.nedge, [g,directed](WEdge* e){
-      ASSERT( e->v0 < g->nv, "e.v0 < g->nv");
-      ASSERT( e->v1 < g->nv, "e.v1 < g->nv");
+      ASSERT_CHARM( e->v0 < g->nv, "e.v0 < g->nv");
+      ASSERT_CHARM( e->v1 < g->nv, "e.v1 < g->nv");
       auto count = [](GlobalAddress<V> v){
         call<async>(v.get_id(), [v]{ v->nadj++; });
       };
@@ -365,7 +365,7 @@ struct Graph {
         //v.local_edge_state = g->edge_storage + offset;
         //offset += v.nadj;
       }
-      ASSERT(adj - g->adj_buf == g->nadj_local, "compact error");
+      ASSERT_CHARM(adj - g->adj_buf == g->nadj_local, "compact error");
     });
   }
 
@@ -442,7 +442,7 @@ struct Graph {
     else return create_unweight(el, true);
   }
 
-} CACHE_ALIGNED;
+} CACHE_ALIGNED_CHARM;
 
 
 
@@ -499,7 +499,7 @@ void pfor_out(AdjIterator<G> a, F body, void (F::*mf)(int64_t, typename G::Edge*
   if(v.get_id() == my_id()){
     task();
   }else{
-    ASSERT(false, "edge storeage must stay together with vertex.");
+    ASSERT_CHARM(false, "edge storeage must stay together with vertex.");
   }
 }
 
@@ -524,7 +524,7 @@ void pfor_in(AdjIterator<G> a, F body, void (F::*mf)(int64_t, typename G::Edge*)
   if(v.get_id() == my_id()){
     task();
   }else{
-    ASSERT(false, "edge storeage must stay together with vertex.");
+    ASSERT_CHARM(false, "edge storeage must stay together with vertex.");
   }
 }
 
@@ -714,7 +714,7 @@ int64_t graph_do(GlobalAddress<G> g, int64_t active_set_size, E emit, W edgework
       std::cout << "sparse : " << active_set_size << " (" << walltime() - start << ")" << std::endl;
     }
   }else{
-    ASSERT(false, "choose Mode : [Spase], [Dense], [Auto]");
+    ASSERT_CHARM(false, "choose Mode : [Spase], [Dense], [Auto]");
   }
 
   // phase 2 : update the graph active state, overhead

@@ -50,11 +50,10 @@ static void compute_edge_range(int rank, int size, int64_t M, int64_t* start_idx
 void make_graph(int log_numverts, int64_t M, uint64_t userseed1, uint64_t userseed2, int64_t* nedges_ptr_in, Charm::GlobalAddress<packed_edge> * result_ptr_in) {
 	int64_t* nedges_ptr = nedges_ptr_in;
   Charm::GlobalAddress<packed_edge> * result_ptr = result_ptr_in;
-	
 	/* Spread the two 64-bit numbers into five nonzero values in the correct
 	 * range. */
 	uint_fast32_t seed[5];
-	
+
 	make_mrg_seed(userseed1, userseed2, seed);
 	
 	*nedges_ptr = M;
@@ -90,7 +89,6 @@ void make_graph(int log_numverts, int64_t M, uint64_t userseed1, uint64_t userse
 #ifdef GRAPH_GENERATOR_MPI
 void make_graph(int log_numverts, int64_t M, uint64_t userseed1, uint64_t userseed2, int64_t* nedges_ptr, packed_edge** result_ptr) {
   int rank, size;
-
   /* Spread the two 64-bit numbers into five nonzero values in the correct
    * range. */
   uint_fast32_t seed[5];

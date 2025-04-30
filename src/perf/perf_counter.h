@@ -21,7 +21,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
- */
+*/
 
 #pragma once
 
@@ -55,12 +55,7 @@ struct PerfCounter {
 	  int fd;
 	  read_format prev;
 	  read_format data;
-
-/* 	  uint64_t readCounter() {
-		double multiplexingCorrection = static_cast<double>(data.time_enabled - prev.time_enabled) / static_cast<double>(data.time_running - prev.time_running);
-		return static_cast<uint64_t>(static_cast<double>(data.value - prev.value) * multiplexingCorrection); 
-	  } */
-
+	  
 	  uint64_t readCounter() {
 		uint64_t count = 0, values[3];
 		int ret;
@@ -88,17 +83,24 @@ struct PerfCounter {
 		//errx(1, "libpfm initialization failed");
 	  }
 
-	  // Fill from L3 or different L2 in same CCX
+	//   Fill from L3 or different L2 in same CCX
 	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
 
 	  // Fill from cache of different CCX in same NUMA node
 	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
 
-	  // Fill from CCX cache in different NUMA node
+	  // Fill from CCX cache in remote NUMA node
 	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
 
 	  // Fill from DRAM or IO connected in same NUMA node
 	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+
+	  // Fill from DRAM or IO connected in remote NUMA node
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
+
+	registerCounter("L1-DCACHE-LOAD-MISSES");
+	registerCounter("STORE_TO_LOAD_FORWARD");
+
 
    	  // additional counters can be found running showevtinfo in perfmon2-libpfm4/examples
 
@@ -115,52 +117,88 @@ struct PerfCounter {
 	  }
    }
 
-   void registerCounter(const std::string& name, EventDomain domain = ALL) {
-      names.push_back(name);
-      events.push_back(event());
-      auto& event = events.back();
-      auto& pe = event.pe;
-      memset(&pe, 0, sizeof(struct perf_event_attr));
 
-      int ret = pfm_get_perf_event_encoding(name.c_str(), PFM_PLM0|PFM_PLM3, &pe, NULL, NULL);
-      if (ret != PFM_SUCCESS) {
-	      std::cout << "Cannot find encoding: " << pfm_strerror(ret) << std::endl;
-              events.resize(0);
-              names.resize(0);
-              return;
-              //errx(1, "cannot find encoding: %s", pfm_strerror(ret));
-      }
+void registerCounter(const std::string& name, EventDomain domain = ALL) {
+    const int maxRetries = 30;  // Maximum number of retries
+    int retries = 0;           // Current retry count
 
-      /*
-       * request timing information because event may be multiplexed
-       * and thus it may not count all the time. The scaling information
-       * will be used to scale the raw count as if the event had run all
-       * along
-       */
-      //pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
+    names.push_back(name);
+    events.push_back(event());
+    auto& event = events.back();
+    auto& pe = event.pe;
+    memset(&pe, 0, sizeof(struct perf_event_attr));
 
-      /* do not start immediately after perf_event_open() */
-      pe.disabled = 1;
+    int ret;
+    while (retries < maxRetries) {
+        ret = pfm_get_perf_event_encoding(name.c_str(), PFM_PLM0 | PFM_PLM3, &pe, NULL, NULL);
+        if (ret == PFM_SUCCESS) {
+            break;  // Success, exit the loop
+        } else {
+            std::cout << "Cannot find encoding: " << pfm_strerror(ret) << std::endl;
+            retries++;
+            if (retries >= maxRetries) {
+                events.resize(0);
+                names.resize(0);
+                return;
+            }
+        }
+    }
 
-      pe.inherit = 1;
-      //pe.inherit_stat = 0;
-      //pe.exclude_user = !(domain & USER);
-      //pe.exclude_kernel = !(domain & KERNEL);
-      //pe.exclude_hv = !(domain & HYPERVISOR);
-      pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
-   }
+    /*
+     * request timing information because event may be multiplexed
+     * and thus it may not count all the time. The scaling information
+     * will be used to scale the raw count as if the event had run all
+     * along
+     */
+    //pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+
+    /* do not start immediately after perf_event_open() */
+    pe.disabled = 1;
+
+    pe.inherit = 1;
+    pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+}
 
 
-   void startCounters() {
-	  for (unsigned i=0; i<events.size(); i++) {
-		 auto& event = events[i];
-		 ioctl(event.fd, PERF_EVENT_IOC_RESET, 0);
-		 ioctl(event.fd, PERF_EVENT_IOC_ENABLE, 0);
-		 if (read(event.fd, &event.prev, sizeof(uint64_t) * 3) != sizeof(uint64_t) * 3)
-			std::cout << "Error reading counter " << names[i] << std::endl;
-	  }
-	  startTime = std::chrono::steady_clock::now();
-   }
+	void startCounters() {
+    	for (unsigned i = 0; i < events.size(); i++) {
+    	    auto& event = events[i];
+    	    ioctl(event.fd, PERF_EVENT_IOC_RESET, 0);
+    	    ioctl(event.fd, PERF_EVENT_IOC_ENABLE, 0);
+        
+    	    // Attempt to read the counter, retrying on failure
+    	    bool success = false;
+    	    int retryCount = 0;
+    	    const int maxRetries = 30; // You can adjust the number of retries as needed
+
+    	    while (!success && retryCount < maxRetries) {
+    	        if (read(event.fd, &event.prev, sizeof(uint64_t) * 3) == sizeof(uint64_t) * 3) {
+    	            success = true;
+    	        } else {
+    	            std::cout << "Error reading counter " << names[i] << " (attempt " << retryCount + 1 << ")" << std::endl;
+    	            retryCount++;
+    	        }
+    	    }
+
+    	    if (!success) {
+    	        std::cout << "Failed to read counter " << names[i] << " after " << maxRetries << " attempts" << std::endl;
+    	    }
+    	}
+    	startTime = std::chrono::steady_clock::now();
+	}
+
+   	void resetCounter(const std::string& name) {
+		for (unsigned i=0; i<events.size(); i++) {
+		 	if (names[i]==name) {
+				auto& event = events[i];
+		 		ioctl(event.fd, PERF_EVENT_IOC_RESET, 0);
+		 		ioctl(event.fd, PERF_EVENT_IOC_ENABLE, 0);
+		 		if (read(event.fd, &event.prev, sizeof(uint64_t) * 3) != sizeof(uint64_t) * 3)
+					std::cout << "Error reading counter " << names[i] << std::endl;
+				break;
+			}
+		}
+   	}
 
    ~PerfCounter() {
 	  for (auto& event : events) {

@@ -1,0 +1,8 @@
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/streamcluster.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/clean_all.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/edit_cache.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/rebuild_cache.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/list_install_components.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/install.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/install/local.dir
+/home/fogli/CHARM/application/streamcluster_no_shoal/CMakeFiles/install/strip.dir

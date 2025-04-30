@@ -65,7 +65,7 @@ public:
 
   //used in the pooling 
   inline void maybe_resend(){
-    //ASSERT (my_id() == this->get_source_core(), "why resend is not on source core." );
+    //ASSERT_CHARM (my_id() == this->get_source_core(), "why resend is not on source core." );
     Message::flag_reset();
     // if we have some completions in the waiting room.
     // re-send a message right now

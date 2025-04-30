@@ -24,24 +24,24 @@ void compute_levels(GlobalAddress<int64_t> level, int64_t nv, GlobalAddress<int6
       /* Run up the three until we encounter an already-leveled vertex. */
       while (parent >= 0 && read(level+parent) < 0 && nhop < nv) {
         next_parent = read(bfs_tree+parent);
-        ASSERT(parent != next_parent, "parent == next_parent");
+        ASSERT_CHARM(parent != next_parent, "parent == next_parent");
         parent = next_parent;
         ++nhop;
       }
-      ASSERT( nhop < nv, "Error: root had a cycle.");
-      ASSERT( parent >= 0, "Ran off the end for root.");
+      ASSERT_CHARM( nhop < nv, "Error: root had a cycle.");
+      ASSERT_CHARM( parent >= 0, "Ran off the end for root.");
     
       // Now assign levels until we meet an already-leveled vertex
       // NOTE: This permits benign races if parallelized.
       nhop += read(level+parent);
       parent = k;
       while (read(level+parent) < 0) {
-        ASSERT(nhop > 0, "nhop > 0")
+        ASSERT_CHARM(nhop > 0, "nhop > 0")
         write(level+parent, nhop);
         nhop--;
         parent = read(bfs_tree+parent);
       }
-      ASSERT(nhop == read(level+parent), "nhop == read(level+parent)");
+      ASSERT_CHARM(nhop == read(level+parent), "nhop == read(level+parent)");
     }
   });  
 }
@@ -50,7 +50,7 @@ void compute_levels(GlobalAddress<int64_t> level, int64_t nv, GlobalAddress<int6
 static thread_local int64_t nedge_traversed;
 int64_t verify_bfs_tree(GlobalAddress<int64_t> bfs_tree, int64_t max_bfsvtx, int64_t root, tuple_graph * tg) {
   
-  ASSERT(read(bfs_tree+root) == root, "bfs_tree + root == root");
+  ASSERT_CHARM(read(bfs_tree+root) == root, "bfs_tree + root == root");
   
   int64_t nv = max_bfsvtx+1;
   int64_t err = 0;
@@ -72,8 +72,8 @@ int64_t verify_bfs_tree(GlobalAddress<int64_t> bfs_tree, int64_t max_bfsvtx, int
     int64_t lvldiff;
 
     if (i < 0 || j < 0) return;
-    ASSERT(!(i > max_bfsvtx && j <= max_bfsvtx), "Error!");
-    ASSERT(!(j > max_bfsvtx && i <= max_bfsvtx), "Error!");
+    ASSERT_CHARM(!(i > max_bfsvtx && j <= max_bfsvtx), "Error!");
+    ASSERT_CHARM(!(j > max_bfsvtx && i <= max_bfsvtx), "Error!");
     if (i > max_bfsvtx) // both i & j are on the same side of max_bfsvtx
       return;
 
@@ -81,8 +81,8 @@ int64_t verify_bfs_tree(GlobalAddress<int64_t> bfs_tree, int64_t max_bfsvtx, int
     int64_t ti = read(bfs_tree+i);
     int64_t tj = read(bfs_tree+j);
 
-    ASSERT(!(ti >= 0 && tj < 0), "Error! ");
-    ASSERT(!(tj >= 0 && ti < 0), "Error! ");
+    ASSERT_CHARM(!(ti >= 0 && tj < 0), "Error! ");
+    ASSERT_CHARM(!(tj >= 0 && ti < 0), "Error! ");
     if (ti < 0) // both i & j have the same sign
       return;
 
@@ -101,7 +101,7 @@ int64_t verify_bfs_tree(GlobalAddress<int64_t> bfs_tree, int64_t max_bfsvtx, int
     }
     lvldiff = read(level+i) - read(level+j);
     /* Check that the levels differ by no more than one. */
-    ASSERT(!(lvldiff > 1 || lvldiff < -1), "Error, levels differ by more than one! ");
+    ASSERT_CHARM(!(lvldiff > 1 || lvldiff < -1), "Error, levels differ by more than one! ");
   });
   //sync_printf("check edges");
 
@@ -112,8 +112,8 @@ int64_t verify_bfs_tree(GlobalAddress<int64_t> bfs_tree, int64_t max_bfsvtx, int
   /* Check that every BFS edge was seen and that there's only one root. */
   pfor(bfs_tree, nv, [root, seen_edge](int64_t k, int64_t* tk){
     if (k != root) {
-      ASSERT( !(*tk >= 0 && !read(seen_edge+k)), "Error!" );
-      ASSERT( *tk != k, "Error!");
+      ASSERT_CHARM( !(*tk >= 0 && !read(seen_edge+k)), "Error!" );
+      ASSERT_CHARM( *tk != k, "Error!");
     }
   });  
   //sync_printf("check only one root");

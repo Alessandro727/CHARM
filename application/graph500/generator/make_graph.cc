@@ -56,13 +56,10 @@ void make_graph(int log_numverts, int64_t M, uint64_t userseed1, uint64_t userse
 	/* Spread the two 64-bit numbers into five nonzero values in the correct
 	 * range. */
 	uint_fast32_t seed[5];
-	
 	make_mrg_seed(userseed1, userseed2, seed);
-	
 	*nedges_ptr = M;
     Charm::GlobalAddress<packed_edge> edges = Charm::gmalloc<packed_edge>( M );
 	*result_ptr = edges;
-	
 	generate_kronecker_range(seed, log_numverts, 0, M, edges);
 }
 

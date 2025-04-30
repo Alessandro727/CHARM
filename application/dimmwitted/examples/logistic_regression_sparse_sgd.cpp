@@ -89,10 +89,10 @@ double f_lr_grad_sparse(const SparseVector<double>* const ex, GLMModelExample_Sp
 template<ModelReplType MODELREPL, DataReplType DATAREPL>
 double test_glm_sparse_sgd(){
 
-//  long nexp = 100000;
+  long nexp = 100000; // Bench.sh
 //  long nfeat = 1024;
 
-  long nexp = 1000000;
+//  long nexp = 1000000;
   long nfeat = 8192;
 
   double * examples = new double[nexp*(nfeat+1)];
@@ -101,12 +101,9 @@ double test_glm_sparse_sgd(){
 
   SparseVector<double>* row_pointers = 
     (SparseVector<double>*) ::operator new(nexp * sizeof(SparseVector<double>));
-  
   long ct = 0;
   for(long i=0;i<nexp;i++){
-
     row_pointers[i] = SparseVector<double>(&examples[ct], &cols[ct], nfeat+1);
-
     rows[i] = ct;    
     for(int j=0;j<nfeat;j++){
       examples[ct] = 1;
@@ -131,8 +128,12 @@ double test_glm_sparse_sgd(){
   dw->register_model_avg(f_handle_grad, f_lr_modelavg);
   dw->register_model_avg(f_handle_loss, f_lr_modelavg);
 
+
   double sum = 0.0;
-  for(int i_epoch=0;i_epoch<2;i_epoch++){
+  double rs = 0.0;
+          // PerfCounter e;
+  // e.startCounters();
+  for(int i_epoch=0;i_epoch<1;i_epoch++){
     double loss = dw->exec(f_handle_loss)/nexp;
     sum = 0.0;
     for(int i=0;i<nfeat;i++){
@@ -140,11 +141,16 @@ double test_glm_sparse_sgd(){
     }
     std::cout.precision(8);
     std::cout << sum << "    loss=" << loss << std::endl;
-    dw->exec(f_handle_grad);
+    rs = dw->exec(f_handle_grad);
   }
 
-  return sum;
+    // e.stopCounters();
+  // e.printReportByLine(std::cout, 1);
+
+  return rs;
 }
+
+
 
 /**
  * \brief This is one example of running SGD for logistic regression

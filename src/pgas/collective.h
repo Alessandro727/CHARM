@@ -130,7 +130,8 @@ void all_do(F work){
   }
 
   barrier->wait();
-  free(barrier);
+  //free(barrier);
+  delete barrier;
 }
 
 template<typename T, T (*ReduceOp)(const T&, const T&)>

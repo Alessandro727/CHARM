@@ -40,8 +40,23 @@ public:
   
   bool try_private(Task* victim);
 
+  bool try_steal(Task* victim) {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        if (!privateQ.empty()) {
+            *victim = privateQ.back();
+            privateQ.pop_back();
+            return true;
+        }
+        return false;
+  }
+
+  void add_stolen_task(Task& stolen_task) {
+        privateQ.push_back(std::move(stolen_task));
+  }
+
 private:
   std::deque<Task> privateQ;
+  std::mutex queue_mutex;
 };
 
 template<typename F>

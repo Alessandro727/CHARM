@@ -46,7 +46,6 @@ public:
 
   inline void wait(){
     auto w = global_scheduler->get_cur_worker();
-
     if( cnt_ == 0 ){
       while( !this->empty() ){
         w->signal(this);

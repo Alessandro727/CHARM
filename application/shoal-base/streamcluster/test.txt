@@ -1,0 +1,9 @@
+Cores: 64
+PARSEC Benchmark Suite
+streamcluster: src/shl.cpp:385: size_t shl__init(uint32_t, bool): Assertion `!get_conf()->use_partition || partitioned_support || !"Compile with -DSHL_STATIC"' failed.
+./runbench.sh: line 6: 3129524 Aborted                 (core dumped) LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../libshoal/shoal/ ./streamcluster 10 20 128 1000000 200000 5000 none output.txt ${i}
+
+real	0m0.177s
+user	0m0.001s
+sys	0m0.005s
+ 

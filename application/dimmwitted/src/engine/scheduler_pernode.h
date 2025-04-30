@@ -25,7 +25,7 @@ double _pernode_run_map(double (*p_map) (long, const RDTYPE * const, WRTYPE * co
     long start, long end, int numa_node){
 
 //  numa_run_on_node(numa_node);
-  numa_set_localalloc();
+//  numa_set_localalloc();
 
   double rs = 0.0;
   for(long i=start;i<end;i++){
@@ -43,9 +43,9 @@ void _pernode_comm(void (*p_comm) (WRTYPE ** const, int, int),
   ){
 
  // numa_run_on_node(numa_node);
-  numa_set_localalloc();
+  //numa_set_localalloc();
 
-  p_comm(allothers, nreplicas, numa_node);
+  //p_comm(allothers, nreplicas, numa_node);
 
 }
 
@@ -57,9 +57,9 @@ void _pernode_comm_julia(void (*p_comm) (WRTYPE * const, int, int),
   ){
 
  // numa_run_on_node(numa_node);
-  numa_set_localalloc();
+//  numa_set_localalloc();
 
-  p_comm(myself, nreplicas, numa_node);
+  //p_comm(myself, nreplicas, numa_node);
 
 }
 
@@ -96,7 +96,9 @@ public:
     RDPTR(_RDPTR), WRPTR(_WRPTR),
     p_model_allocator(_p_model_allocator),
     n_numa_node( numa_max_node() + 1),
-    n_thread_per_node(getNumberOfCores()/(numa_max_node() + 1)),
+    //n_numa_node(1),
+    //n_thread_per_node(getNumberOfCores()/(numa_max_node() + 1)),
+    n_thread_per_node(4), // Bench.sh
     isjulia(false)
   {}
 
@@ -116,7 +118,7 @@ public:
     model_replicas = new WRTYPE*[n_sharding+1];
     for(int i=0;i<n_sharding;i++){
       //numa_run_on_node(i);
-      numa_set_localalloc();
+      //numa_set_localalloc();
       std::cout << "| Allocating models on NUMA Node " << i << std::endl;
       p_model_allocator(&model_replicas[i], WRPTR);
     }
@@ -151,18 +153,24 @@ public:
     std::vector<std::future<double>> futures;
     std::vector<std::thread> comm_threads;
 
+    std::vector<std::unique_ptr<Charm::Future<double>, std::default_delete<Charm::Future<double>>>> futuresCharm;
+
     int n_numa_nodes = n_numa_node - 1;
-//    int n_thread_per_numa = n_thread_per_node;
-    int n_thread_per_numa = 8;
+    int n_thread_per_numa = n_thread_per_node;
+//    int n_thread_per_numa = 8;
     n_numa_nodes ++;
     int n_sharding = n_numa_nodes;
 
     int ct = -1;
     int total = n_numa_nodes * n_thread_per_numa;
 
+//    int core = total;
     std::cout << "| Running on " << n_sharding << " Nodes with " << n_thread_per_numa << " Cores Each..." << std::endl;
 
     double rs = 0.0;
+
+//    n_sharding=64;
+    int counter = 0;
 
     for(int i_sharding=0;i_sharding<n_sharding;i_sharding++){
       for(int i_thread=0;i_thread<n_thread_per_numa;i_thread++){
@@ -172,9 +180,11 @@ public:
         end = end >= ntasks ? ntasks : end;
         
         if(DATAREPL == DW_DATAREPL_FULL){
-          futures.push_back(std::async(std::launch::async, _pernode_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks, i_sharding));
+//          futures.push_back(std::async(std::launch::async, _pernode_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks, i_sharding));
+	  futuresCharm.push_back(Charm::call<Charm::async>(ct, [this, &ntasks, &p_map, &tasks, &i_sharding]{double t = _pernode_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks, i_sharding); return t;}));
         }else{
-          futures.push_back(std::async(std::launch::async, _pernode_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, start, end, i_sharding));
+//          futures.push_back(std::async(std::launch::async, _pernode_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, model_replicas[i_sharding], tasks, start, end, i_sharding));
+	  futuresCharm.push_back(Charm::call<Charm::async>(ct, [this, &ntasks, &p_map, &tasks, &start, &end, &i_sharding]{double t = _pernode_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, start, end, i_sharding); return t;}));
         }
         //std::cout << "| Start worker " << i_thread << " on NUMA node " << i_sharding << std::endl;
       }
@@ -190,7 +200,8 @@ public:
     }
 
     for(int i=0;i<total;i++){
-      rs += futures[i].get();
+  //    rs += futures[i].get();
+	rs += futuresCharm[i]->get();
     }
 
     for(int i=0;i<n_sharding;i++){

@@ -1,0 +1,97 @@
+--------------------------------------------------------------------------
+-- Copyright (c) 2014, ETH Zurich.
+-- All rights reserved.
+--
+-- This file is distributed under the terms in the attached LICENSE file.
+-- If you do not find this file, copies can be found by writing to:
+-- ETH Zurich D-INFK, Universitaetstr. 6, CH-8092 Zurich. Attn: Systems Group.
+--
+--------------------------------------------------------------------------
+
+[
+  build library {
+    target = "shl",
+    cFiles = [
+        "shoal/src/barrelfish/malloc.c",
+        "shoal/src/barrelfish/memcpy.c",
+        "shoal/src/barrelfish/machine.c",
+        "shoal/src/barrelfish/shl.c",
+        "contrib/pycrc/crc.c"
+    ],
+    cxxFiles = [
+        "shoal/src/misc.cpp",
+        "shoal/src/shl.cpp",
+        "shoal/src/shl_array_conf.cpp",
+        "shoal/src/shl_array.cpp",
+        "shoal/src/shl_array_replicated.cpp",
+       -- "shoal/src/shl_cost.cpp",
+        "shoal/src/shl_timer.cpp",
+        "shoal/src/shl_multitimer.cpp",
+        "shoal/src/shl_array_wr-rep.cpp"
+    ],
+    addCFlags = [
+      "-fopenmp"
+    ],
+    addCxxFlags = [
+      "-fopenmp"
+    ],
+    addIncludes = [
+        "shoal/inc/backend/barrelfish",
+        "shoal/inc",
+        "contrib/pycrc"
+    ],
+    addLibraries = libDeps [
+  --      "bomp",
+        "bench",
+        "lua",
+        "numa",
+        "dma",
+        "pci"
+    ],
+    architectures = [
+      "x86_64"
+    ]
+  },
+    build library {
+    target = "shl",
+    cFiles = [
+        "shoal/src/barrelfish/malloc.c",
+        "shoal/src/barrelfish/memcpy.c",
+        "shoal/src/barrelfish/machine.c",
+        "shoal/src/barrelfish/shl.c",
+        "contrib/pycrc/crc.c"
+    ],
+    cxxFiles = [
+        "shoal/src/misc.cpp",
+        "shoal/src/shl.cpp",
+        "shoal/src/shl_array_conf.cpp",
+        "shoal/src/shl_array.cpp",
+        "shoal/src/shl_array_replicated.cpp",
+       -- "shoal/src/shl_cost.cpp",
+        "shoal/src/shl_timer.cpp",
+        "shoal/src/shl_multitimer.cpp",
+        "shoal/src/shl_array_wr-rep.cpp"
+    ],
+    addCFlags = [
+      "-fopenmp"
+    ],
+    addCxxFlags = [
+      "-fopenmp"
+    ],
+    addIncludes = [
+        "shoal/inc/backend/barrelfish",
+        "shoal/inc",
+        "contrib/pycrc"
+    ],
+    addLibraries = libDeps [
+        --"bomp",
+        "bench",
+        "lua",
+        "numa",
+        "dma"
+    ],
+    architectures = [
+      "k1om"
+    ]
+  }
+]

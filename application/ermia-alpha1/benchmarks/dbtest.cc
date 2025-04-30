@@ -4,6 +4,8 @@
 #include <utility>
 #include <string>
 
+#include "charm.h"
+
 #include <gflags/gflags.h>
 
 #include "bench.h"
@@ -317,10 +319,14 @@ int main(int argc, char **argv) {
                  << FLAGS_persist_policy;
     }
   }
+  
+  //Charm::CHARM_Init(&argc, &argv);
+  //Charm::run([&argc]{
+  
 
   ermia::thread::Initialize();
   ermia::config::init();
-
+/*
   std::cerr << "CC: ";
 #ifdef SSI
   std::cerr << "SSI";
@@ -408,6 +414,8 @@ int main(int argc, char **argv) {
     std::cerr << "  truncate-at-bench-start : " << ermia::config::truncate_at_bench_start << std::endl;
     std::cerr << "  wait-for-backups  : " << ermia::config::wait_for_backups << std::endl;
   }
+  */
+ 
 
   system("rm -rf /dev/shm/$(whoami)/ermia-log/*");
   ermia::MM::prepare_node_memory();
@@ -436,8 +444,13 @@ int main(int argc, char **argv) {
   // it could be on any node. But not all nodes will be used by benchmark
   // (i.e., config::numa_nodes) and so not all nodes will have memory pool. So
   // here run on the first NUMA node to ensure we got a place to allocate memory
-  numa_run_on_node(0);
+
+  //numa_run_on_node(0);
+  
+  
   test_fn(db, argc, new_argv);
   delete db;
+  //});
+  //Charm::CHARM_Finalize();
   return 0;
 }

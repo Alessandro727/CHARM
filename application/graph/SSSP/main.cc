@@ -33,7 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using namespace Charm;
 
-const int scale = 24;
+const int scale = 24; // Bench.sh
 const int edgefactor = 16;
 
 template<typename T, typename E>
@@ -72,7 +72,12 @@ int main(int argc, char* argv[]){
     el.random_weight();
 
     auto g = G::Undirected(el, true);
+  //         PerfCounter e;
+  // e.startCounters();
     sssp(el, g);
+  //   e.stopCounters();
+  // e.printReportByLine(std::cout, 1);
+  
     mlog_dump();
   });
   CHARM_Finalize();

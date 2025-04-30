@@ -51,7 +51,8 @@ xmalloc (size_t sz)
   }
 
   if (numa_avail)
-    out = numa_alloc (sz);
+//    out = numa_alloc (sz);
+    out = malloc (sz);
   else
     out = malloc (sz);
   if (!out) {
@@ -80,7 +81,8 @@ xcalloc (size_t n, size_t sz)
 	      n, sz);
       abort ();
     }
-    out = numa_alloc (n * sz);
+//    out = numa_alloc (n * sz);
+    out = calloc (n, sz);
 #if defined(_OPENMP)
 #pragma omp parallel for
       for (size_t k = 0; k < n; ++k)

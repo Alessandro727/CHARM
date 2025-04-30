@@ -40,11 +40,11 @@ void ChunkAllocator::init(size_t chunk_size, int which_numa){
 
 void ChunkAllocator::alloc_new_chunk(size_t size){
   struct memory_chunk_t *new_chunk;
-  new_chunk = align_alloc<struct memory_chunk_t>(CACHE_LINE_SIZE);
+  new_chunk = align_alloc<struct memory_chunk_t>(CHARM_CACHE_LINE_SIZE);
   
   new_chunk->next = NULL;
   new_chunk->chunk_size = this->chunk_size;
-  new_chunk->chunk = align_alloc<char>(CACHE_LINE_SIZE, new_chunk->chunk_size);
+  new_chunk->chunk = align_alloc<char>(CHARM_CACHE_LINE_SIZE, new_chunk->chunk_size);
   total_allocated += chunk_size;
 
   if(!first){
@@ -60,7 +60,7 @@ void ChunkAllocator::alloc_new_chunk(size_t size){
 void* ChunkAllocator::alloc(size_t size){
   size = (size_t)ALIGN_UP(size, 64);
 
-  ASSERT(chunk_size >= size, "overflow pool total size");
+  ASSERT_CHARM(chunk_size >= size, "overflow pool total size");
   if(this->last == NULL || this->last->chunk_size - this->last->offset < size){
     alloc_new_chunk(size);
   }

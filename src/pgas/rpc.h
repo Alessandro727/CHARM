@@ -132,7 +132,6 @@ struct Specializer<SyncMode::blocking, F>{
     blocking_call_cnt ++;
     size_t from_id = my_id();
     size_t to_id = id;
-  
     if(from_id == to_id){
       return func(); 
     }else{
