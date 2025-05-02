@@ -77,7 +77,7 @@ public:
       current_chiplet = current_chiplet  % CHIPLETS;
       current_slot = current_slot + rank / CORES_PER_CHIPLET;
     }
-    int core = current_chiplet * CHIPLETS + current_slot;
+    int core = current_chiplet * CORES_PER_CHIPLET + current_slot;
     set_thread_affinity(core);
     int numa_node = core / CORES_PER_NUMA_NODE;
     numa_set_preferred(numa_node);

@@ -84,22 +84,47 @@ struct PerfCounter {
 	  }
 
 	//   Fill from L3 or different L2 in same CCX
-	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
 
 	  // Fill from cache of different CCX in same NUMA node
-	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
+	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
 
 	  // Fill from CCX cache in remote NUMA node
-	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
 
 	  // Fill from DRAM or IO connected in same NUMA node
-	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
 
 	  // Fill from DRAM or IO connected in remote NUMA node
-	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
+	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
 
-	registerCounter("L1-DCACHE-LOAD-MISSES");
-	registerCounter("STORE_TO_LOAD_FORWARD");
+	  //registerCounter("L1-DCACHE-LOAD-MISSES");
+	  //registerCounter("STORE_TO_LOAD_FORWARD");
+
+        // Event Code for OFFCORE_RESPONSE (typically 0xB7 for recent Intel CPUs)
+        uint64_t offcore_event_code = 0xb7;
+        // umask for OFFCORE_RESPONSE (typically 0x01 for any request type)
+        uint64_t offcore_umask = 0x01;
+
+        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE
+        // Response from Local L3 Hit (Example Mask - VERIFY!)
+        registerRawCounter("OFFCORE_RESPONSE:L3_HIT_LOCAL", offcore_event_code, offcore_umask, 0x3f803c0100); // L3 Hit M/E/S/F, LLC Hit, Local Source
+
+        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL
+        // Response from Remote Cache Hit (Same Socket) (Example Mask - VERIFY!)
+         registerRawCounter("OFFCORE_RESPONSE:REMOTE_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0200); // L3 Hit M/E/S/F, LLC Hit, Remote Cache Source
+
+        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT
+        // Response from Remote Cache Hit (Different Socket) (Example Mask - VERIFY!)
+        registerRawCounter("OFFCORE_RESPONSE:REMOTE_SOCKET_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0400); // L3 Hit M/E/S/F, LLC Hit, Remote Socket Source
+
+        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL
+        // Response from Local DRAM (Example Mask - VERIFY!)
+        registerRawCounter("OFFCORE_RESPONSE:LOCAL_DRAM", offcore_event_code, offcore_umask, 0x3fbe048000); // LLC Miss, Local DRAM Source
+
+        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT
+        // Response from Remote DRAM (Example Mask - VERIFY!)
+        registerRawCounter("OFFCORE_RESPONSE:REMOTE_DRAM", offcore_event_code, offcore_umask, 0x3fc2010000); // LLC Miss, Remote DRAM Source
 
 
    	  // additional counters can be found running showevtinfo in perfmon2-libpfm4/examples
@@ -116,6 +141,31 @@ struct PerfCounter {
 		 }
 	  }
    }
+
+// Structure to hold event data
+// Helper to register raw OFFCORE_RESPONSE events
+    void registerRawCounter(const std::string& name, uint64_t eventCode, uint64_t umask, uint64_t config1Mask) {
+        names.push_back(name);
+        events.emplace_back(); // Add a new PerfEventData
+        auto& pe = events.back().pe;
+
+        memset(&pe, 0, sizeof(struct perf_event_attr));
+        pe.type = PERF_TYPE_RAW;
+        pe.size = sizeof(struct perf_event_attr);
+        pe.config = eventCode;  // The raw event code (e.g., 0xb7)
+        pe.config1 = config1Mask; // The specific response mask
+        pe.config |= (umask << 8); // Add umask if needed (some raw events use it)
+
+        // Configure standard options
+        pe.disabled = 1; // Start disabled, enable later
+        pe.exclude_kernel = 0; // Count kernel-mode
+        pe.exclude_user = 0;   // Count user-mode
+        pe.exclude_hv = 1;
+        pe.exclude_idle = 1;
+        pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+         std::cout << "Registering raw: " << name << " (code=" << eventCode << ", umask=" << umask << ", config1=" << std::hex << config1Mask << std::dec << ")" << std::endl;
+    }
+
 
 
 void registerCounter(const std::string& name, EventDomain domain = ALL) {
