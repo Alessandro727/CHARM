@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/gups.dir/link.d"
   "CMakeFiles/gups.dir/main.cc.o"
   "CMakeFiles/gups.dir/main.cc.o.d"
   "gups"

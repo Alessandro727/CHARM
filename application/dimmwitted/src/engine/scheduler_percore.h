@@ -109,8 +109,8 @@ public:
     ){
 
     std::vector<std::future<double>> futures;
-    // std::vector<std::unique_ptr<Charm::Future<double>, std::default_delete<Charm::Future<double>>>> futuresCharm;
-    std::vector<std::unique_ptr<Charm::Future<int>, std::default_delete<Charm::Future<int>>>> futuresCharm; 
+    std::vector<std::unique_ptr<Charm::Future<double>, std::default_delete<Charm::Future<double>>>> futuresCharm;
+    // std::vector<std::unique_ptr<Charm::Future<int>, std::default_delete<Charm::Future<int>>>> futuresCharm; 
 
     long n_sharding = n_numa_node * n_thread_per_node;
 //    long n_sharding = 1;
@@ -140,14 +140,14 @@ public:
 //        futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks));
 //        Charm::call<Charm::async>(i_sharding, [this, &ntasks, &p_map, &tasks, &futures]{futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks));});
         //std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks);
-        //  futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{double t =  _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks); return t;}));
-        futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks); return 0;}));
+         futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{double t =  _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, 0, ntasks); return t;}));
+        // futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, 0, ntasks); return 0;}));
       }else{
 //        futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end));
 //        Charm::call<Charm::async>(i_sharding, [this, &ntasks, &p_map, &tasks, &start, &end, &futures]{futures.push_back(std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end));});
         //std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end);
-        //  futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{double t = _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, start, end); return t;}));
-        futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end); return 0;}));
+         futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{double t = _percore_run_map<RDTYPE, WRTYPE>(p_map, RDPTR, model_replicas[i_sharding], tasks, start, end); return t;}));
+        // futuresCharm.push_back(Charm::call<Charm::async>(i_sharding%core, [this, &ntasks, &p_map, &tasks, &i_sharding, &start, &end]{std::async(std::launch::async, _hogwild_run_map<RDTYPE, WRTYPE>, p_map, RDPTR, WRPTR, tasks, start, end); return 0;}));
       }
       // rs += w->get();
 

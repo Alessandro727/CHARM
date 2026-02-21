@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "../../lib/libthread_pool.pdb"
   "../../lib/libthread_pool.so"
+  "CMakeFiles/thread_pool.dir/link.d"
   "CMakeFiles/thread_pool.dir/dbcore/sm-thread.cpp.o"
   "CMakeFiles/thread_pool.dir/dbcore/sm-thread.cpp.o.d"
 )

@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/example_dense_sgd.dir/link.d"
   "CMakeFiles/example_dense_sgd.dir/examples/example_dense_sgd.cpp.o"
   "CMakeFiles/example_dense_sgd.dir/examples/example_dense_sgd.cpp.o.d"
   "example_dense_sgd"

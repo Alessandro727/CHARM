@@ -60,6 +60,11 @@ void CHARM_Init(int* argc, char** argv[]){
   /* build scheduler */
   /* add task worker */
   global_scheduler = new Scheduler( INIT_CORO_NUM );
+  // const char* env_sched = std::getenv("CHARM_SCHEDULER");
+  // std::string sched_type = (env_sched) ? std::string(env_sched) : "DEFAULT";
+
+  // Use the factory to create the correct scheduler type
+  //global_scheduler = Charm::Scheduler::create(sched_type, INIT_CORO_NUM);
 
   /* build Communicator */
   global_comm = new Communicator();

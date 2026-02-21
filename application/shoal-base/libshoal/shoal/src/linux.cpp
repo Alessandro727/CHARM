@@ -95,8 +95,9 @@ void shl__bind_processor_aff(int id)
 //    printf("Binding [%d] to [%d]\n", id, affinity_conf[id]);
     if (affinity_conf!=NULL) {
         // aff_set_oncpu(affinity_conf[id]);
-	int value = 8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64);
-	aff_set_oncpu(affinity_conf[8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64)]);
+	// int value = 8 * (id % 64 % 8) + (id % 64 / 8) + (id / 64 * 64);
+    int value = (id / 8) + (id % 8) * 16;
+    aff_set_oncpu(affinity_conf[value]);
 //	fprintf(stderr, "Value= %d\n", value);
     	// set_thread_affinity(value);
         // aff_set_oncpu(value);

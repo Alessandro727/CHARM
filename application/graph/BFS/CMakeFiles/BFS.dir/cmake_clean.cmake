@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/BFS.dir/link.d"
   "BFS"
   "BFS.pdb"
   "CMakeFiles/BFS.dir/main.cc.o"

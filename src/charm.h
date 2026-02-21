@@ -45,6 +45,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "pgas/collective.h"
 #include "pgas/rpc.h"
 #include "pgas/parallelfor.h"
+#include <cstdlib>
 
 namespace Charm{
 

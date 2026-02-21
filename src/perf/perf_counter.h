@@ -23,6 +23,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+// ----------------------------------------------
+// Remember:
+// sudo sysctl -w kernel.perf_event_paranoid=1
+// ----------------------------------------------
+
 #pragma once
 
 #include <chrono>
@@ -55,7 +60,12 @@ struct PerfCounter {
 	  int fd;
 	  read_format prev;
 	  read_format data;
-	  
+
+/* 	  uint64_t readCounter() {
+		double multiplexingCorrection = static_cast<double>(data.time_enabled - prev.time_enabled) / static_cast<double>(data.time_running - prev.time_running);
+		return static_cast<uint64_t>(static_cast<double>(data.value - prev.value) * multiplexingCorrection); 
+	  } */
+
 	  uint64_t readCounter() {
 		uint64_t count = 0, values[3];
 		int ret;
@@ -76,6 +86,7 @@ struct PerfCounter {
    std::vector<std::string> names;
    std::chrono::time_point<std::chrono::steady_clock> startTime;
    std::chrono::time_point<std::chrono::steady_clock> stopTime;
+   	
 
    PerfCounter() {
 	  if (pfm_initialize() != PFM_SUCCESS) {
@@ -83,49 +94,56 @@ struct PerfCounter {
 		//errx(1, "libpfm initialization failed");
 	  }
 
+	  // FOR AMD !!!
 	//   Fill from L3 or different L2 in same CCX
-	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
 
 	  // Fill from cache of different CCX in same NUMA node
-	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
 
 	  // Fill from CCX cache in remote NUMA node
-	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
 
 	  // Fill from DRAM or IO connected in same NUMA node
-	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
 
 	  // Fill from DRAM or IO connected in remote NUMA node
-	  //registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
+	  registerCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
 
-	  //registerCounter("L1-DCACHE-LOAD-MISSES");
-	  //registerCounter("STORE_TO_LOAD_FORWARD");
 
-        // Event Code for OFFCORE_RESPONSE (typically 0xB7 for recent Intel CPUs)
-        uint64_t offcore_event_code = 0xb7;
-        // umask for OFFCORE_RESPONSE (typically 0x01 for any request type)
-        uint64_t offcore_umask = 0x01;
 
-        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE
-        // Response from Local L3 Hit (Example Mask - VERIFY!)
-        registerRawCounter("OFFCORE_RESPONSE:L3_HIT_LOCAL", offcore_event_code, offcore_umask, 0x3f803c0100); // L3 Hit M/E/S/F, LLC Hit, Local Source
+	  		// For INTEL !!!
+	          // Event Code for OFFCORE_RESPONSE (typically 0xB7 for recent Intel CPUs)
+			  uint64_t offcore_event_code = 0xb7;
+			  // umask for OFFCORE_RESPONSE (typically 0x01 for any request type)
+			  uint64_t offcore_umask = 0x01;
+	  
+			  // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE
+			  // Response from Local L3 Hit (Example Mask - VERIFY!)
+			  registerRawCounter("OFFCORE_RESPONSE:L3_HIT_LOCAL", offcore_event_code, offcore_umask, 0x3f803c0100); // L3 Hit M/E/S/F, LLC Hit, Local Source
+	  
+			  // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL
+			  // Response from Remote Cache Hit (Same Socket) (Example Mask - VERIFY!)
+			   registerRawCounter("OFFCORE_RESPONSE:REMOTE_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0200); // L3 Hit M/E/S/F, LLC Hit, Remote Cache Source
+	  
+			  // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT
+			  // Response from Remote Cache Hit (Different Socket) (Example Mask - VERIFY!)
+			  registerRawCounter("OFFCORE_RESPONSE:REMOTE_SOCKET_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0400); // L3 Hit M/E/S/F, LLC Hit, Remote Socket Source
+	  
+			  // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL
+			  // Response from Local DRAM (Example Mask - VERIFY!)
+			  registerRawCounter("OFFCORE_RESPONSE:LOCAL_DRAM", offcore_event_code, offcore_umask, 0x3fbe048000); // LLC Miss, Local DRAM Source
+	  
+			  // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT
+			  // Response from Remote DRAM (Example Mask - VERIFY!)
+			  registerRawCounter("OFFCORE_RESPONSE:REMOTE_DRAM", offcore_event_code, offcore_umask, 0x3fc2010000); // LLC Miss, Remote DRAM Source
 
-        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL
-        // Response from Remote Cache Hit (Same Socket) (Example Mask - VERIFY!)
-         registerRawCounter("OFFCORE_RESPONSE:REMOTE_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0200); // L3 Hit M/E/S/F, LLC Hit, Remote Cache Source
+			  registerRawCounter("MEM_LOAD_RETIRED:L2_MISS", 0xd1, 0x10, 0);
 
-        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT
-        // Response from Remote Cache Hit (Different Socket) (Example Mask - VERIFY!)
-        registerRawCounter("OFFCORE_RESPONSE:REMOTE_SOCKET_CACHE_HIT", offcore_event_code, offcore_umask, 0x3f803c0400); // L3 Hit M/E/S/F, LLC Hit, Remote Socket Source
+			  registerRawCounter("OFFCORE_RESPONSE:DEMAND_DATA_RD_REMOTE_CACHE_SNOOP_HITM", offcore_event_code, offcore_umask, 0x100400101); // LLC Miss, Remote DRAM Source
 
-        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL
-        // Response from Local DRAM (Example Mask - VERIFY!)
-        registerRawCounter("OFFCORE_RESPONSE:LOCAL_DRAM", offcore_event_code, offcore_umask, 0x3fbe048000); // LLC Miss, Local DRAM Source
-
-        // Equivalent to AMD: ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT
-        // Response from Remote DRAM (Example Mask - VERIFY!)
-        registerRawCounter("OFFCORE_RESPONSE:REMOTE_DRAM", offcore_event_code, offcore_umask, 0x3fc2010000); // LLC Miss, Remote DRAM Source
-
+			
+			
 
    	  // additional counters can be found running showevtinfo in perfmon2-libpfm4/examples
 
@@ -144,27 +162,27 @@ struct PerfCounter {
 
 // Structure to hold event data
 // Helper to register raw OFFCORE_RESPONSE events
-    void registerRawCounter(const std::string& name, uint64_t eventCode, uint64_t umask, uint64_t config1Mask) {
-        names.push_back(name);
-        events.emplace_back(); // Add a new PerfEventData
-        auto& pe = events.back().pe;
+void registerRawCounter(const std::string& name, uint64_t eventCode, uint64_t umask, uint64_t config1Mask) {
+	names.push_back(name);
+	events.emplace_back(); // Add a new PerfEventData
+	auto& pe = events.back().pe;
 
-        memset(&pe, 0, sizeof(struct perf_event_attr));
-        pe.type = PERF_TYPE_RAW;
-        pe.size = sizeof(struct perf_event_attr);
-        pe.config = eventCode;  // The raw event code (e.g., 0xb7)
-        pe.config1 = config1Mask; // The specific response mask
-        pe.config |= (umask << 8); // Add umask if needed (some raw events use it)
+	memset(&pe, 0, sizeof(struct perf_event_attr));
+	pe.type = PERF_TYPE_RAW;
+	pe.size = sizeof(struct perf_event_attr);
+	pe.config = eventCode;  // The raw event code (e.g., 0xb7)
+	pe.config1 = config1Mask; // The specific response mask
+	pe.config |= (umask << 8); // Add umask if needed (some raw events use it)
 
-        // Configure standard options
-        pe.disabled = 1; // Start disabled, enable later
-        pe.exclude_kernel = 0; // Count kernel-mode
-        pe.exclude_user = 0;   // Count user-mode
-        pe.exclude_hv = 1;
-        pe.exclude_idle = 1;
-        pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
-         std::cout << "Registering raw: " << name << " (code=" << eventCode << ", umask=" << umask << ", config1=" << std::hex << config1Mask << std::dec << ")" << std::endl;
-    }
+	// Configure standard options
+	pe.disabled = 1; // Start disabled, enable later
+	pe.exclude_kernel = 0; // Count kernel-mode
+	pe.exclude_user = 0;   // Count user-mode
+	pe.exclude_hv = 1;
+	pe.exclude_idle = 1;
+	pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+	 std::cout << "Registering raw: " << name << " (code=" << eventCode << ", umask=" << umask << ", config1=" << std::hex << config1Mask << std::dec << ")" << std::endl;
+}
 
 
 
@@ -206,9 +224,24 @@ void registerCounter(const std::string& name, EventDomain domain = ALL) {
     pe.disabled = 1;
 
     pe.inherit = 1;
+    //pe.inherit_stat = 0;
+    //pe.exclude_user = !(domain & USER);
+    //pe.exclude_kernel = !(domain & KERNEL);
+    //pe.exclude_hv = !(domain & HYPERVISOR);
     pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
 }
 
+
+//    void startCounters() {
+// 	  for (unsigned i=0; i<events.size(); i++) {
+// 		 auto& event = events[i];
+// 		 ioctl(event.fd, PERF_EVENT_IOC_RESET, 0);
+// 		 ioctl(event.fd, PERF_EVENT_IOC_ENABLE, 0);
+// 		 if (read(event.fd, &event.prev, sizeof(uint64_t) * 3) != sizeof(uint64_t) * 3)
+// 			std::cout << "Error reading counter " << names[i] << std::endl;
+// 	  }
+// 	  startTime = std::chrono::steady_clock::now();
+//    }
 
 	void startCounters() {
     	for (unsigned i = 0; i < events.size(); i++) {
@@ -240,6 +273,7 @@ void registerCounter(const std::string& name, EventDomain domain = ALL) {
    	void resetCounter(const std::string& name) {
 		for (unsigned i=0; i<events.size(); i++) {
 		 	if (names[i]==name) {
+				// std::cout << "RESETVALUE!!" << std::endl;
 				auto& event = events[i];
 		 		ioctl(event.fd, PERF_EVENT_IOC_RESET, 0);
 		 		ioctl(event.fd, PERF_EVENT_IOC_ENABLE, 0);

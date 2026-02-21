@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "../../lib/libermia_si.pdb"
   "../../lib/libermia_si.so"
+  "CMakeFiles/ermia_si.dir/link.d"
   "CMakeFiles/ermia_si.dir/benchmarks/bench.cc.o"
   "CMakeFiles/ermia_si.dir/benchmarks/bench.cc.o.d"
   "CMakeFiles/ermia_si.dir/benchmarks/egen/AddressTable.cpp.o"

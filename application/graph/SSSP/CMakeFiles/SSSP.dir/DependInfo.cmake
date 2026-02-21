@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/fogli/CHARM/application/graph/SSSP/main.cc" "application/graph/SSSP/CMakeFiles/SSSP.dir/main.cc.o" "gcc" "application/graph/SSSP/CMakeFiles/SSSP.dir/main.cc.o.d"
+  "" "application/graph/SSSP/SSSP" "gcc" "application/graph/SSSP/CMakeFiles/SSSP.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

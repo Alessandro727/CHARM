@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/streamcluster.dir/link.d"
   "CMakeFiles/streamcluster.dir/parsec_barrier.cpp.o"
   "CMakeFiles/streamcluster.dir/parsec_barrier.cpp.o.d"
   "CMakeFiles/streamcluster.dir/streamcluster.cpp.o"

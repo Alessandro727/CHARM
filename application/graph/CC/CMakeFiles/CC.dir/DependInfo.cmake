@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/fogli/CHARM/application/graph/CC/main.cc" "application/graph/CC/CMakeFiles/CC.dir/main.cc.o" "gcc" "application/graph/CC/CMakeFiles/CC.dir/main.cc.o.d"
+  "" "application/graph/CC/CC" "gcc" "application/graph/CC/CMakeFiles/CC.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

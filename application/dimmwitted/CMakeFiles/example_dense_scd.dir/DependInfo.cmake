@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/fogli/CHARM/application/dimmwitted/examples/example_dense_scd.cpp" "application/dimmwitted/CMakeFiles/example_dense_scd.dir/examples/example_dense_scd.cpp.o" "gcc" "application/dimmwitted/CMakeFiles/example_dense_scd.dir/examples/example_dense_scd.cpp.o.d"
+  "" "application/dimmwitted/example_dense_scd" "gcc" "application/dimmwitted/CMakeFiles/example_dense_scd.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

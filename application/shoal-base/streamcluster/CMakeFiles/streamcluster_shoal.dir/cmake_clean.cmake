@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/streamcluster_shoal.dir/link.d"
   "CMakeFiles/streamcluster_shoal.dir/__/libshoal/shoal/src/linux.cpp.o"
   "CMakeFiles/streamcluster_shoal.dir/__/libshoal/shoal/src/linux.cpp.o.d"
   "CMakeFiles/streamcluster_shoal.dir/__/libshoal/shoal/src/misc.cpp.o"

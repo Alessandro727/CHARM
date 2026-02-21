@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgraph500-generator.a "CMakeFiles/graph500-generator.dir/graph_generator.cc.o" "CMakeFiles/graph500-generator.dir/make_graph.cc.o" "CMakeFiles/graph500-generator.dir/mrg_transitions.c.o" "CMakeFiles/graph500-generator.dir/splittable_mrg.c.o" "CMakeFiles/graph500-generator.dir/utils.cc.o"
+/usr/bin/ranlib libgraph500-generator.a

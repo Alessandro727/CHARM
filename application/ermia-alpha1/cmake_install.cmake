@@ -57,3 +57,9 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/fogli/CHARM/application/ermia-alpha1/masstree/cmake_install.cmake")
 endif()
 
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/home/fogli/CHARM/application/ermia-alpha1/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()

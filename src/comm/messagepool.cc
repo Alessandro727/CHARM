@@ -24,6 +24,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "comm/messagepool.h"
+#include "utils/memlog.h"
 
 namespace Charm{
 

@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/example_sparse_sgd.dir/link.d"
   "CMakeFiles/example_sparse_sgd.dir/examples/example_sparse_sgd.cpp.o"
   "CMakeFiles/example_sparse_sgd.dir/examples/example_sparse_sgd.cpp.o.d"
   "example_sparse_sgd"

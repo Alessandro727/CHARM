@@ -1,3 +1,4 @@
+
 set( SOURCES
     utils/IO.h
     utils/memlog.h
@@ -29,6 +30,15 @@ set( SOURCES
     sched/coroutine.cc
     sched/scheduler.h
     sched/scheduler.cc
+    sched/scheduler_RING.h
+    sched/scheduler_RING.cc
+    sched/scheduler_SAM.h
+    sched/scheduler_SAM.cc
+    sched/scheduler_ASYM.h
+    sched/scheduler_ASYM.cc
+    sched/scheduler_CHARM.h
+    sched/scheduler_CHARM.cc
+    sched/scheduler_impl.h
     sched/thread_barrier.h
     tasking/task.h
     tasking/task_queue.h
@@ -54,6 +64,39 @@ set( SOURCES
 
 enable_language(ASM)
 set_source_files_properties(sched/context.S PROPERTIES LANGUAGE ASM COMPILE_FLAGS " -g")
+
+# Flag comuni per rinominare le funzioni globali e le variabili
+#set(SCHED_RENAME_FLAGS
+#    "global_scheduler=global_scheduler_XXX"
+#    "thread_rank=thread_rank_XXX"
+#    "thread_size=thread_size_XXX"
+#    "my_id=my_id_XXX"
+#    "yield=yield_XXX"
+#    "maybe_yield=maybe_yield_XXX"
+#    "set_allow_yield=set_allow_yield_XXX"
+#    "allow_yield=allow_yield_XXX"
+#    "delivery_private=delivery_private_XXX"
+#    "global_exit_flag=global_exit_flag_XXX"
+#    "thread_id=thread_id_XXX"
+#)
+
+# Configura scheduler_CHARM.cc
+# Sostituiamo XXX con CHARM nelle macro
+
+#string(REPLACE "XXX" "CHARM" CHARM_FLAGS "${SCHED_RENAME_FLAGS}")
+#set_source_files_properties(sched/scheduler_CHARM.cc PROPERTIES COMPILE_DEFINITIONS
+#    "SCHEDULER_BUILD_IMPL;SCHEDULER_IMPL_CHARM;Scheduler=SchedulerCHARM;Worker=WorkerCHARM;${CHARM_FLAGS}"
+#)
+
+# Configura scheduler_RING.cc
+# Sostituiamo XXX con RING nelle macro
+
+#string(REPLACE "XXX" "RING" RING_FLAGS "${SCHED_RENAME_FLAGS}")
+#set_source_files_properties(sched/scheduler_RING.cc PROPERTIES COMPILE_DEFINITIONS
+#    "SCHEDULER_BUILD_IMPL;SCHEDULER_IMPL_RING;Scheduler=SchedulerRING;Worker=WorkerRING;${RING_FLAGS}"
+#)
+
+
 
 # Add library target
 #add_library(Charm ${SOURCES})

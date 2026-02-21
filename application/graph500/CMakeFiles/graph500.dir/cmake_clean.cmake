@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/graph500.dir/link.d"
   "CMakeFiles/graph500.dir/generator/graph_generator.cc.o"
   "CMakeFiles/graph500.dir/generator/graph_generator.cc.o.d"
   "CMakeFiles/graph500.dir/generator/make_graph.cc.o"

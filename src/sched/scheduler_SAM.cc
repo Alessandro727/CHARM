@@ -1,242 +1,327 @@
-/* scheduler.cc
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * INSTITUTE OF COMPUTING TECHNOLOGY AND CONTRIBUTORS BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- */
-
- 
+/* scheduler_SAM.cc */
 #include <future>
 #include <thread>
 #include <atomic>
 #include <numaif.h>
+#include <cmath>
 
 #ifdef NUMA_AWARE
 #include <numa.h>
 #endif
 
-#include "sched/scheduler.h"
-#include "sched/coroutine.h"
-#include "tasking/task_queue.h"
+#include "sched/scheduler.h" 
+#include "scheduler_SAM.h"
 
-namespace Charm{
+namespace Charm {
 
-Scheduler * global_scheduler;
-bool global_exit_flag;
+static const double C_rT = 5.5e5;    
+static const double R_rT = 2.7e6;    
+static const double M_rT = 7.5e7;    
 
-thread_local int thread_id;
-thread_local bool allow_yield=true;
+static std::string detectCpuVendor() {
+    unsigned int eax, ebx, ecx, edx;
+    char vendor[13];
+    __get_cpuid(0, &eax, &ebx, &ecx, &edx);
+    memcpy(vendor + 0, &ebx, 4);
+    memcpy(vendor + 4, &edx, 4);
+    memcpy(vendor + 8, &ecx, 4);
+    vendor[12] = '\0';
+    return std::string(vendor);
+}
 
-Worker::Worker(size_t ith, int worker_num, Thread_Barrier* tb, std::vector<Worker*>& all_workers, std::vector<std::unique_ptr<TaskInfo>>& tasks)
-    : rank(ith), stop(false), all_workers(all_workers) {
-    current_chiplet = ith / CORES_PER_CHIPLET;
+void SamWorker::set_thread_affinity(std::thread::native_handle_type t_handle, int core_id) {
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(core_id, &cpuset);
+  int rc = pthread_setaffinity_np(t_handle, sizeof(cpu_set_t), &cpuset);
+  if (rc != 0) std::cerr << "Error setting affinity for core " << core_id << ": " << rc << std::endl;
+}
 
+static bool bindMemoryToNode(void* addr, size_t len, int node) {
+    struct bitmask* nodemask = numa_allocate_nodemask();
+    numa_bitmask_clearall(nodemask);
+    numa_bitmask_setbit(nodemask, node);
+    long ret = mbind(addr, len, MPOL_BIND, nodemask->maskp, nodemask->size, MPOL_MF_MOVE);
+    numa_free_nodemask(nodemask);
+    if (ret != 0) return false;
+    return true;
+}
 
-  
+static void migrateTask(TaskInfo &t, int targetSocket, int targetCoreInSocket) {
+    int globalCore = targetSocket * CORES_PER_NUMA_NODE_SAM + targetCoreInSocket;
+    
+    SamWorker::set_thread_affinity(t.threadHandle, globalCore);
+    
+    t.assignedSocket = targetSocket;
+    t.assignedCore = targetCoreInSocket;
+    
+    if (t.buffer) {
+         bindMemoryToNode(t.buffer, t.bufSize * sizeof(double), targetSocket);
+    }
+}
+
+static void deriveMetrics(TaskInfo &t) {
+    CoherenceMetrics &m = t.metrics;
+    m.l2miss   = t.l2miss_value;
+    m.l3hit    = t.l3hit_value;
+    m.l3miss   = t.l3miss_value;
+    m.llcMiss  = t.llcMiss_value;
+    m.remoteFwd  = t.remoteFwd_value;
+    m.remoteHitm = t.remoteHitm_value;
+    m.remoteDram = t.remoteDram_value;
+    m.intraSocket = m.l2miss - (m.l3hit + m.l3miss);
+    m.interSocket = m.remoteFwd + m.remoteHitm;
+}
+
+// --- SamWorker Implementation ---
+
+SamWorker::SamWorker(size_t ith, int worker_num, Thread_Barrier* tb, std::vector<SamWorker*>& all_workers, SamScheduler* scheduler)
+    : rank(ith), stop(false), all_workers(all_workers), parent_scheduler(scheduler) {
+    
+    this->time = std::chrono::steady_clock::now(); 
+
+    std::unique_ptr<TaskInfo> newTask(new TaskInfo());
+    newTask->id = ith;
+    newTask->tid.store(0);
+    newTask->assignedSocket = ith / CORES_PER_NUMA_NODE_SAM; 
+    newTask->originalSocket = newTask->assignedSocket;
+    newTask->assignedCore = ith % CORES_PER_NUMA_NODE_SAM;   
+    
+    newTask->l2miss_value = -1; newTask->l3hit_value = -1; newTask->l3miss_value = -1;
+    newTask->llcMiss_value = -1; newTask->remoteFwd_value = -1; 
+    newTask->remoteHitm_value = -1; newTask->remoteDram_value = -1;
+    newTask->lastMigration = std::chrono::steady_clock::now() - std::chrono::seconds(2);
+
+    size_t numDoubles = (1 << 20) / sizeof(double);
+    newTask->bufSize = numDoubles;
+    newTask->buffer = (double *)numa_alloc_onnode(numDoubles * sizeof(double), newTask->assignedSocket);
+    
+    if (newTask->buffer) {
+        for (size_t k = 0; k < numDoubles; k++) newTask->buffer[k] = (double)rand() / RAND_MAX;
+    }
+
+    this->ti = newTask.get(); 
+    parent_scheduler->tasks.push_back(std::move(newTask)); 
+
     t = std::thread( [ith, this, tb, worker_num](){
       this->csched = new Coro_Scheduler(ith, &taskQ);
       this->stop = false;
 
+      Charm::thread_id = ith;
+      // Self-affinity at startup
+      set_thread_affinity(pthread_self(), ith);
+      
+      this->ti->tid.store(syscall(SYS_gettid));
 
-  #ifdef NUMA_AWARE
-      int threads = THREAD_SIZE;
-  #endif
-  
-      thread_id = ith;
+      this->eventsCounter = new PerfCounter();
+      this->eventsCounter->startCounters();
+
       tb->wait();
-  
-      /* create normal workers */
       this->add_task_worker(worker_num);
-  
       csched->await();
     });
-
-    ti = std::unique_ptr<TaskInfo>(new TaskInfo());
-    int i = worker_num;
-    // Create tasks
-    std::unique_ptr<TaskInfo> ti(new TaskInfo);
-    ti->id = i;
-    ti->tid.store(0);
-    ti->assignedSocket = i % NUMA_DOMAINS;
-    ti->originalSocket = ti->assignedSocket;
-    ti->assignedCore = i;
-    ti->l2miss_value = -1;
-    ti->l3hit_value = -1;
-    ti->l3miss_value = -1;
-    ti->llcMiss_value = -1;
-    ti->remoteFwd_value = -1;
-    ti->remoteHitm_value = -1;
-    ti->remoteDram_value = -1;
-    ti->lastMigration = std::chrono::steady_clock::now() - std::chrono::seconds(2);
-    // Allocate 1 MB buffer on the
-    size_t numDoubles = (1 << 20) / sizeof(double);
-    ti->bufSize = numDoubles;
-    ti->buffer = (double *)numa_alloc_onnode(numDoubles * sizeof(double),
-                                             ti->assignedSocket);
-    if (!ti->buffer)
-    {
-      std::cerr << "[Error] numa_alloc_onnode failed for task " << ith << "\n";
-    }
-    for (size_t k = 0; k < numDoubles; k++)
-    {
-      ti->buffer[k] = (double)rand() / RAND_MAX;
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
-
-    // Open perf events for each task
-    pid_t ttid = ti->tid.load();
-    this->eventsCounter = new PerfCounter();
-    this->eventsCounter->startCounters();
-    this->time = std::chrono::steady_clock::now();
-
-    tasks.push_back(std::move(ti));
+    
+    this->ti->threadHandle = t.native_handle();
 }
 
-
-void Worker::task_worker(){
+void SamWorker::task_worker(){
   Task victim;
   bool finded = false;
   for(;;){
     finded = taskQ.try_private(&victim);
-    /* we may get a task here */
     if(!finded){
       if(!this->stop){
-        //wait(this->have_tasks);
         idle();
       }else break;
     }else{
       csched->active_coro_num ++;
       victim();
       csched->active_coro_num --;
-      /* to see if we should switch to a periodic worker */
       maybe_yield();
     }
   }
 }
 
-
-
-void Worker::set_thread_affinity(int core_id) {
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(core_id, &cpuset);
-
-    int rc = pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
-    if (rc != 0) {
-        std::cerr << "Error setting thread affinity: " << rc << std::endl;
-    }
-        int numa_node = core_id / CORES_PER_NUMA_NODE;
-
-    struct bitmask* nodemask = numa_allocate_nodemask();
-    numa_bitmask_setbit(nodemask, numa_node);
-    numa_set_membind(nodemask);
-    numa_free_nodemask(nodemask);
+void SamWorker::finish(){
+    this->stop = true;
+    if(eventsCounter) eventsCounter->stopCounters();
 }
 
-   
+void SamWorker::yield(){
+    auto current_time_now = std::chrono::steady_clock::now();
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(current_time_now - time);
+    
+    if (elapsed_time.count() >= SCHEDULER_TIMER_SAM) {
+    
+        if(this->eventsCounter) {
+            ti->l2miss_value = this->eventsCounter->getCounter("L1-DCACHE-LOAD-MISSES");
+            ti->l3hit_value = this->eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+            ti->l3miss_value = this->eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
+            ti->llcMiss_value = this->eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+            ti->remoteFwd_value = this->eventsCounter->getCounter("STORE_TO_LOAD_FORWARD");
+            ti->remoteHitm_value = this->eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+            ti->remoteDram_value = this->eventsCounter->getCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
 
-Scheduler::Scheduler(int worker_num){
+            this->eventsCounter->resetCounter("L1-DCACHE-LOAD-MISSES");
+            this->eventsCounter->resetCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:INT_CACHE");
+            this->eventsCounter->resetCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_LCL");
+            this->eventsCounter->resetCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:EXT_CACHE_RMT");
+            this->eventsCounter->resetCounter("STORE_TO_LOAD_FORWARD");
+            this->eventsCounter->resetCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_LCL");
+            this->eventsCounter->resetCounter("ANY_DATA_CACHE_FILLS_FROM_SYSTEM:MEM_IO_RMT");
+
+            deriveMetrics(*ti);
+        }
+      
+        parent_scheduler->runSAM();
+
+        time = std::chrono::steady_clock::now();
+    }
+
+    csched->coroutine_yield();
+}
+
+
+SamScheduler::SamScheduler(int worker_num){
   num_threads = THREAD_SIZE;
   start_barrier = new Thread_Barrier( num_threads+1 );
-
   std::srand((unsigned)std::time(nullptr));
 
-    //<<< ADDED FOR AMD SUPPORT >>>: Detect vendor and set raw codes
-    std::string vendor = detectCpuVendor();
-    if (vendor == "GenuineIntel") {
-        // Original Intel placeholders
-        gEvt = {
-            0x3424, // L2_MISS
-            0x3425, // L3_HIT
-            0x3426, // L3_MISS
-            0x412E, // LLC_MISSES
-            0x01b7, // REMOTE_FWD
-            0x02b7, // REMOTE_HITM
-            0x01cb  // REMOTE_DRAM
-        };
-        std::cout << "[Info] Detected Intel CPU: using Intel raw events.\n";
-    }
-    else if (vendor == "AuthenticAMD") {
-        // Example: we fallback to 0 here and will open "generic" counters
-        // for the L2/L3/LLC events. Real AMD raw codes differ by microarchitecture
-        // and you must consult the AMD PPR or other docs for correct event+Umask.
-        gEvt = {
-            0, 0, 0, 0,  // these will fallback to PERF_COUNT_HW_CACHE_MISSES
-            0, 0, 0      // we have no direct AMD codes for REMOTE_FWD/HITM/DRAM here
-        };
-        std::cout << "[Info] Detected AMD CPU: fallback to generic counters.\n";
-    }
-    else {
-        // Some other vendor (VM, etc.?). Use all generic or do your own logic
-        gEvt = {0,0,0,0,0,0,0};
-        std::cout << "[Warning] Unknown CPU vendor: using all-generic.\n";
-    }
+  std::string vendor = detectCpuVendor();
+  if (vendor == "GenuineIntel") {
+      gEvt = { 0x3424, 0x3425, 0x3426, 0x412E, 0x01b7, 0x02b7, 0x01cb };
+      std::cout << "[SAM] Detected Intel CPU.\n";
+  } else {
+      gEvt = { 0, 0, 0, 0, 0, 0, 0 };
+      std::cout << "[SAM] Non-Intel CPU: generic counters.\n";
+  }
 
   tasks.reserve(THREAD_SIZE);
   
-  /* no need to use emplace_back */
   for(size_t i = 0; i < num_threads; ++i) {
-    workers.push_back(new Worker(i, worker_num, start_barrier, workers, tasks));
+    workers.push_back(new SamWorker(i, worker_num, start_barrier, workers, this));
     std::this_thread::sleep_for(std::chrono::milliseconds(250));
   }
-  /* make sure that all the thread local memory are finished */
   while(start_barrier->get_cnt() != 1);
 }
 
-void Scheduler::spawn_coroutine(size_t ith, std::function<void()> f, int tag){
+void SamScheduler::runSAM() {
+    if (!samMutex.try_lock()) {
+        return; 
+    }
+    
+    auto &tv = this->tasks; 
+
+    std::vector<int> socketLoad(NUMA_DOMAINS_SAM, 0);
+    for (auto &t : tv) {
+        socketLoad[t->assignedSocket]++;
+    }
+
+    // Step 1: High InterSocket Coherence
+    std::vector<int> interTasks;
+    for (size_t i = 0; i < tv.size(); i++) {
+        if (tv[i]->metrics.interSocket > C_rT)
+            interTasks.push_back((int)i);
+    }
+    
+    if (!interTasks.empty()) {
+        int bestSocket = 0, minLoad = socketLoad[0];
+        for (int s = 1; s < NUMA_DOMAINS_SAM; s++) {
+            if (socketLoad[s] < minLoad) {
+                bestSocket = s;
+                minLoad = socketLoad[s];
+            }
+        }
+        
+        for (int idx : interTasks) {
+            if (tv[idx]->assignedSocket != bestSocket && socketLoad[bestSocket] < CORES_PER_NUMA_NODE_SAM) {
+                socketLoad[tv[idx]->assignedSocket]--;
+                socketLoad[bestSocket]++;
+                tv[idx]->assignedSocket = bestSocket;
+            }
+        }
+    }
+
+    // Step 2: Remote DRAM
+    for (auto &t : tv) {
+        if (t->metrics.remoteDram > R_rT) {
+            if (t->assignedSocket != t->originalSocket) {
+                if (socketLoad[t->originalSocket] < CORES_PER_NUMA_NODE_SAM) {
+                    socketLoad[t->assignedSocket]--;
+                    socketLoad[t->originalSocket]++;
+                    t->assignedSocket = t->originalSocket;
+                }
+            }
+        }
+    }
+
+    // Step 3: LLC Misses
+    for (auto &t : tv) {
+        if (t->metrics.llcMiss > M_rT) {
+            int bestSocket = t->assignedSocket;
+            int minL = socketLoad[bestSocket];
+            for (int s = 0; s < NUMA_DOMAINS_SAM; s++) {
+                if (socketLoad[s] < minL) {
+                    bestSocket = s;
+                    minL = socketLoad[s];
+                }
+            }
+            if (bestSocket != t->assignedSocket) {
+                if (socketLoad[bestSocket] < CORES_PER_NUMA_NODE_SAM) {
+                    socketLoad[t->assignedSocket]--;
+                    socketLoad[bestSocket]++;
+                    t->assignedSocket = bestSocket;
+                }
+            }
+        }
+    }
+
+    // Step 4: Apply Migration
+    auto now = std::chrono::steady_clock::now();
+    std::vector<int> coreIdx(NUMA_DOMAINS_SAM, 0);
+    for (auto &t : tv) {
+        int targetCoreInSocket = coreIdx[t->assignedSocket] % CORES_PER_NUMA_NODE_SAM;
+        coreIdx[t->assignedSocket]++;
+        
+        if (t->assignedCore != targetCoreInSocket) {
+          auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - t->lastMigration);
+          if (duration.count() >= 1) { 
+            t->lastMigration = now;
+            migrateTask(*t, t->assignedSocket, targetCoreInSocket);
+          }
+        }
+    }
+
+    samMutex.unlock();
+}
+
+void SamScheduler::spawn_coroutine(size_t ith, std::function<void()> f, int tag){
   workers[ith]->spawn_coroutine(f, tag);
 }
 
-void Scheduler::spawn_coroutine_periodic(size_t ith, std::function<void()> f, int tag){
+void SamScheduler::spawn_coroutine_periodic(size_t ith, std::function<void()> f, int tag){
   workers[ith]->spawn_coroutine_periodic(f, tag);
 }
 
-void Scheduler::start_perf_counters() {
-  for(auto& w : workers){
-    w->eventsCounter = new PerfCounter();
-    w->eventsCounter->startCounters();
-  }
+void SamScheduler::start_perf_counters() {
 }
 
-size_t Scheduler::get_size(){
-  return this->num_threads;
-}
-
-int Scheduler::get_id(){
-  return thread_id;
-}
-
-void Scheduler::finish(){
+void SamScheduler::finish(){
   for(auto pw : workers){
     pw->finish();
   }
 }
 
-void Scheduler::await(){
+void SamScheduler::await(){
   for(auto pw : workers){
      pw->await(); 
   }
-  
 }
 
-void yield(){
-  ASSERT_CHARM(allow_yield, "should not yiled");
-  global_scheduler->get_cur_worker()->yield();
-  runSAM(global_scheduler->tasks);
+std::vector<WorkerImpl*> SamScheduler::get_workers_impl() {
+    std::vector<WorkerImpl*> base_workers;
+    for(auto* w : workers) base_workers.push_back(w);
+    return base_workers;
 }
 
-void maybe_yield(){
-  ASSERT_CHARM(allow_yield, "should not yiled");
-  global_scheduler->get_cur_worker()->maybe_yield();
-}
-
-}//namespace Charm
+} // namespace Charm
